@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote MCP Servers — CampusX Notes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --surface: #111827;
+            --surface2: #1a2235;
+            --border: #1e2d45;
+            --accent: #00d4ff;
+            --accent2: #7c3aed;
+            --accent3: #10b981;
+            --accent4: #f59e0b;
+            --accent5: #ef4444;
+            --text: #e2e8f0;
+            --text-muted: #64748b;
+            --text-dim: #94a3b8;
+            --code-bg: #0d1117;
+            --code-border: #21262d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0f1e35 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 40px 48px 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -60px;
+            left: 30%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.07) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.25);
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 3px;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(24px, 4vw, 42px);
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .header h1 span {
+            color: var(--accent);
+        }
+
+        .header-sub {
+            margin-top: 10px;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 300;
+        }
+
+        .toc-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+
+        .toc-pill {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            font-size: 12px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'JetBrains Mono', monospace;
+            text-decoration: none;
+        }
+
+        .toc-pill:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.3);
+            color: var(--accent);
+        }
+
+        /* Layout */
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 48px;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .section-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            padding: 3px 9px;
+            border-radius: 3px;
+            letter-spacing: 0.08em;
+        }
+
+        .section h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.01em;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 22px 24px;
+            margin-bottom: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px 0 0 3px;
+        }
+
+        .card.green::before {
+            background: var(--accent3);
+        }
+
+        .card.purple::before {
+            background: var(--accent2);
+        }
+
+        .card.yellow::before {
+            background: var(--accent4);
+        }
+
+        .card.red::before {
+            background: var(--accent5);
+        }
+
+        .card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .card p,
+        .card li {
+            font-size: 13.5px;
+            color: var(--text-dim);
+            line-height: 1.65;
+        }
+
+        .card ul {
+            padding-left: 16px;
+        }
+
+        .card li {
+            margin-bottom: 4px;
+        }
+
+        /* Two column grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Compare table */
+        .compare {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .compare-col {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .compare-head {
+            padding: 12px 18px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.04em;
+        }
+
+        .compare-head.blue {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--accent);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.15);
+        }
+
+        .compare-head.purple {
+            background: rgba(124, 58, 237, 0.12);
+            color: #a78bfa;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        .compare-body {
+            padding: 14px 18px;
+        }
+
+        .compare-body li {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+            list-style: none;
+            padding-left: 14px;
+            position: relative;
+        }
+
+        .compare-body li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* Code block */
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 14px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 16px;
+            background: #161b22;
+            border-bottom: 1px solid var(--code-border);
+        }
+
+        .code-filename {
+            font-size: 12px;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .code-lang {
+            font-size: 10px;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .code-block pre {
+            padding: 18px 20px;
+            font-size: 12.5px;
+            line-height: 1.65;
+            overflow-x: auto;
+            color: #c9d1d9;
+        }
+
+        .kw {
+            color: #ff79c6;
+        }
+
+        .fn {
+            color: #50fa7b;
+        }
+
+        .str {
+            color: #f1fa8c;
+        }
+
+        .cm {
+            color: #6272a4;
+            font-style: italic;
+        }
+
+        .num {
+            color: #bd93f9;
+        }
+
+        .cls {
+            color: #8be9fd;
+        }
+
+        .var {
+            color: #f8f8f2;
+        }
+
+        /* Steps list */
+        .steps {
+            counter-reset: step;
+            list-style: none;
+            padding: 0;
+        }
+
+        .steps li {
+            counter-increment: step;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 12px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 13.5px;
+            color: var(--text-dim);
+            transition: border-color 0.2s;
+        }
+
+        .steps li:hover {
+            border-color: rgba(0, 212, 255, 0.2);
+        }
+
+        .steps li::before {
+            content: counter(step, decimal-leading-zero);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent);
+            min-width: 28px;
+            padding-top: 1px;
+        }
+
+        .steps li strong {
+            color: #fff;
+            font-weight: 600;
+            margin-right: 6px;
+        }
+
+        /* Inline code */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            background: rgba(0, 212, 255, 0.07);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            color: var(--accent);
+            padding: 2px 7px;
+            border-radius: 4px;
+        }
+
+        /* Diagram */
+        .diagram {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 28px 24px;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+
+        .diagram-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            flex-wrap: wrap;
+            row-gap: 12px;
+        }
+
+        .d-box {
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .d-box.blue {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0, 212, 255, 0.07);
+        }
+
+        .d-box.purple {
+            border-color: #a78bfa;
+            color: #a78bfa;
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        .d-box.green {
+            border-color: var(--accent3);
+            color: var(--accent3);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .d-arrow {
+            padding: 0 10px;
+            color: var(--text-muted);
+            font-size: 18px;
+            font-weight: 300;
+        }
+
+        .diagram-note {
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Tag */
+        .tag {
+            display: inline-block;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 2px 8px;
+            border-radius: 3px;
+            margin-right: 5px;
+            margin-bottom: 3px;
+        }
+
+        .tag-blue {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .tag-green {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent3);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .tag-purple {
+            background: rgba(124, 58, 237, 0.1);
+            color: #a78bfa;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        .tag-yellow {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent4);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        /* Callout */
+        .callout {
+            display: flex;
+            gap: 14px;
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+            align-items: flex-start;
+        }
+
+        .callout-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+            padding-top: 1px;
+        }
+
+        .callout p {
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        .callout strong {
+            color: #fbbf24;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 40px 0;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 32px;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="badge">MCP Trilogy · CampusX · Sep 2025</div>
+        <h1>How to Build & Deploy<br><span>Remote MCP Servers</span></h1>
+        <div class="header-sub">Complete notes — Local vs Remote · FastMCP · Expense Tracker · Deploy · Proxy</div>
+        <div class="toc-bar">
+            <a class="toc-pill" href="#s1">Concepts</a>
+            <a class="toc-pill" href="#s2">Plan</a>
+            <a class="toc-pill" href="#s3">Calculator Server</a>
+            <a class="toc-pill" href="#s4">Setup Steps</a>
+            <a class="toc-pill" href="#s5">Deploy</a>
+            <a class="toc-pill" href="#s6">Expense Tracker</a>
+            <a class="toc-pill" href="#s7">Fixing Issues</a>
+            <a class="toc-pill" href="#s8">Proxy Server</a>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- SECTION 1: CONCEPTS -->
+        <div class="section" id="s1">
+            <div class="section-label">
+                <span class="section-num">01</span>
+                <h2>Local vs Remote MCP — Concepts</h2>
+            </div>
+
+            <div class="compare">
+                <div class="compare-col">
+                    <div class="compare-head blue">📦 Local MCP Server</div>
+                    <ul class="compare-body">
+                        <li>Runs on your machine</li>
+                        <li>Communication via <strong>STDIO</strong></li>
+                        <li><strong>Fast</strong> — no network latency</li>
+                        <li>Single client only</li>
+                        <li>Best for personal / dev use</li>
+                    </ul>
+                </div>
+                <div class="compare-col">
+                    <div class="compare-head purple">🌐 Remote MCP Server</div>
+                    <ul class="compare-body">
+                        <li>Hosted on the internet</li>
+                        <li>Communication over <strong>network</strong></li>
+                        <li>Slower (network overhead)</li>
+                        <li><strong>Multiple clients</strong> can connect</li>
+                        <li>Powerful — enterprise-grade</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Key Insight</h3>
+                <p>Enterprise MCP servers → Remote servers. Remote servers are more powerful because they can serve many
+                    clients simultaneously and run on dedicated infrastructure. The trade-off is network latency vs
+                    capability and reach.</p>
+            </div>
+
+            <div class="diagram">
+                <div class="diagram-flow">
+                    <div class="d-box blue">Claude Desktop</div>
+                    <div class="d-arrow">⟷</div>
+                    <div class="d-box purple">Local MCP<br>(Fast MCP)</div>
+                    <div class="d-arrow">⟷</div>
+                    <div class="d-box green">Remote MCP<br>(diff on internet)</div>
+                </div>
+                <div class="diagram-note">Fast (local) ← vs → Slow over network (remote)</div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- SECTION 2: PLAN OF ATTACK -->
+        <div class="section" id="s2">
+            <div class="section-label">
+                <span class="section-num">02</span>
+                <h2>Plan of Attack</h2>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3>① Simple Remote Server</h3>
+                    <p>Build a basic FastMCP server from a code perspective — understand the structure before building
+                        anything complex.</p>
+                </div>
+                <div class="card green">
+                    <h3>② Expense Tracking MCP</h3>
+                    <p>A real-world MCP server with SQLite database — add, list, and summarize expenses via tools.</p>
+                </div>
+                <div class="card purple">
+                    <h3>③ Deploy via FastMCP Cloud</h3>
+                    <p>Push code to GitHub → select repo on FastMCP Cloud → deploy as a live remote MCP server
+                        instantly.</p>
+                </div>
+                <div class="card yellow">
+                    <h3>④ Problems → Rectify</h3>
+                    <p>Debug common issues: read-only DB, async conflicts. Migrate sqlite3 → aiosqlite for remote
+                        compatibility.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- SECTION 3: SIMPLE CALCULATOR SERVER -->
+        <div class="section" id="s3">
+            <div class="section-label">
+                <span class="section-num">03</span>
+                <h2>Simple Remote Server — Calculator</h2>
+            </div>
+
+            <div class="card">
+                <h3>Structure</h3>
+                <p>A FastMCP server with 2 tools and 1 resource, running over <strong>HTTP on port 8000</strong> with
+                    host <code>0.0.0.0</code> for remote access.</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-filename">main.py — Simple Calculator Server</span>
+                    <span class="code-lang">Python</span>
+                </div>
+                <pre><span class="kw">from</span> <span class="cls">fastmcp</span> <span class="kw">import</span> <span class="cls">FastMCP</span>
+<span class="kw">import</span> <span class="var">random</span>
+<span class="kw">import</span> <span class="var">json</span>
+
+<span class="cm"># Create the FastMCP server instance</span>
+<span class="var">mcp</span> = <span class="cls">FastMCP</span>(<span class="str">"Simple Calculator Server"</span>)
+
+<span class="cm"># Tool 1: Add two numbers</span>
+<span class="kw">@</span><span class="var">mcp</span>.<span class="fn">tool</span>
+<span class="kw">def</span> <span class="fn">add</span>(<span class="var">a</span>: <span class="cls">int</span>, <span class="var">b</span>: <span class="cls">int</span>) -> <span class="cls">int</span>:
+    <span class="str">"""Add two numbers together.
+
+    Args:
+        a: First number
+        b: Second number
+
+    Returns:
+        The sum of a and b
+    """</span>
+    <span class="kw">return</span> <span class="var">a</span> + <span class="var">b</span>
+
+<span class="cm"># Tool 2: Generate a random number</span>
+<span class="kw">@</span><span class="var">mcp</span>.<span class="fn">tool</span>
+<span class="kw">def</span> <span class="fn">random_number</span>(<span class="var">min_val</span>: <span class="cls">int</span> = <span class="num">1</span>, <span class="var">max_val</span>: <span class="cls">int</span> = <span class="num">100</span>) -> <span class="cls">int</span>:
+    <span class="str">"""Generate a random number within a range.
+
+    Args:
+        min_val: Minimum value (default: 1)
+        max_val: Maximum value (default: 100)
+
+    Returns:
+        A random integer between min_val and max_val
+    """</span>
+    <span class="kw">return</span> <span class="var">random</span>.<span class="fn">randint</span>(<span class="var">min_val</span>, <span class="var">max_val</span>)
+
+<span class="cm"># Resource: Server information</span>
+<span class="kw">@</span><span class="var">mcp</span>.<span class="fn">resource</span>(<span class="str">"info://server"</span>)
+<span class="kw">def</span> <span class="fn">server_info</span>() -> <span class="cls">str</span>:
+    <span class="str">"""Get information about this server."""</span>
+    <span class="var">info</span> = {
+        <span class="str">"name"</span>: <span class="str">"Simple Calculator Server"</span>,
+        <span class="str">"version"</span>: <span class="str">"1.0.0"</span>,
+        <span class="str">"description"</span>: <span class="str">"A basic MCP server with math tools"</span>,
+        <span class="str">"tools"</span>: [<span class="str">"add"</span>, <span class="str">"random_number"</span>],
+        <span class="str">"author"</span>: <span class="str">"Your Name"</span>
+    }
+    <span class="kw">return</span> <span class="var">json</span>.<span class="fn">dumps</span>(<span class="var">info</span>, <span class="var">indent</span>=<span class="num">2</span>)
+
+<span class="cm"># Start the server</span>
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="var">mcp</span>.<span class="fn">run</span>(<span class="var">transport</span>=<span class="str">"http"</span>, <span class="var">host</span>=<span class="str">"0.0.0.0"</span>, <span class="var">port</span>=<span class="num">8000</span>)</pre>
+            </div>
+
+            <div class="callout">
+                <span class="callout-icon">💡</span>
+                <p><strong>Key difference from local:</strong> <code>transport="http"</code> +
+                    <code>host="0.0.0.0"</code> makes it a remote server. Local servers use default STDIO transport.</p>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- SECTION 4: SETUP STEPS -->
+        <div class="section" id="s4">
+            <div class="section-label">
+                <span class="section-num">04</span>
+                <h2>16-Step Setup Checklist</h2>
+            </div>
+
+            <ol class="steps">
+                <li><strong>Install uv</strong> — Python package manager used throughout</li>
+                <li><strong>Create new folder</strong> — project directory for the MCP server</li>
+                <li><strong>Open folder in VS Code</strong> — <code>code .</code></li>
+                <li><strong>uv init .</strong> — initialise uv project in current directory</li>
+                <li><strong>uv add fastmcp</strong> — install FastMCP as dependency</li>
+                <li><strong>Create a simple server</strong> — write <code>main.py</code> with tools</li>
+                <li><strong>Run the server</strong> — <code>uv run main.py</code></li>
+                <li><strong>Test with MCP Inspector</strong> — verify tools work via browser UI</li>
+                <li><strong>Create a GitHub repo</strong> — needed for FastMCP Cloud deployment</li>
+                <li><strong>git init</strong></li>
+                <li><strong>git add .</strong></li>
+                <li><strong>git commit -m "Initial commit: Simple MCP server"</strong></li>
+                <li><strong>git remote add origin</strong>
+                    <code>https://github.com/yourusername/simple-mcp-server.git</code></li>
+                <li><strong>git push -u origin main</strong></li>
+                <li><strong>Create account on FastMCP cloud</strong> — <code>fastmcp.cloud</code></li>
+                <li><strong>Deploy on FastMCP cloud</strong> — select repo, configure, click Deploy</li>
+            </ol>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- SECTION 5: DEPLOY -->
+        <div class="section" id="s5">
+            <div class="section-label">
+                <span class="section-num">05</span>
+                <h2>Deploying on FastMCP Cloud</h2>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Option A — Clone Template</h3>
+                    <p>New to MCP? Instantly clone a template and customise it to your needs later.</p>
+                    <br><span class="tag tag-blue">Beginner</span>
+                </div>
+                <div class="card green">
+                    <h3>Option B — Deploy from Code</h3>
+                    <p>Already have a FastMCP server? Select a GitHub repository and deploy it instantly.</p>
+                    <br><span class="tag tag-green">Our approach</span>
+                </div>
+            </div>
+
+            <div class="card purple">
+                <h3>Deployment Configuration</h3>
+                <ul>
+                    <li><strong>Repository:</strong> Select from your GitHub repos (e.g.
+                        <code>campusx-official/test-remote-mcp-server</code>)</li>
+                    <li><strong>Server Name:</strong> Auto-generated (e.g. <code>splendid-gold-dingo</code>) — cannot be
+                        changed later</li>
+                    <li><strong>Entrypoint:</strong> <code>main.py</code></li>
+                    <li><strong>Authentication:</strong> Toggle on/off</li>
+                    <li><strong>Discoverable:</strong> Toggle on/off</li>
+                    <li><strong>Live URL:</strong> <code>https://splendid-gold-dingo.fastmcp.app/mcp</code></li>
+                </ul>
+            </div>
+
+            <div class="callout">
+                <span class="callout-icon">🚀</span>
+                <p><strong>How it works:</strong> FastMCP Cloud connects to your GitHub repo, pulls the main branch on
+                    each deploy, and auto-builds the server. Updates push automatically when you push to
+                    <code>main</code>.</p>
+            </div>
+
+            <div class="diagram">
+                <div
+                    style="font-family:'Syne',sans-serif; font-size:13px; color:var(--text-muted); margin-bottom:14px;">
+                    Deployment Flow</div>
+                <div class="diagram-flow">
+                    <div class="d-box">Code (local)</div>
+                    <div class="d-arrow">→</div>
+                    <div class="d-box blue">GitHub repo</div>
+                    <div class="d-arrow">→</div>
+                    <div class="d-box purple">FastMCP Cloud</div>
+                    <div class="d-arrow">→</div>
+                    <div class="d-box green">Live URL</div>
+                </div>
+                <div class="diagram-note">Production status • Commit hash • Deploy time tracked in Deployments tab</div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- SECTION 6: EXPENSE TRACKER -->
+        <div class="section" id="s6">
+            <div class="section-label">
+                <span class="section-num">06</span>
+                <h2>Expense Tracker MCP Server</h2>
+            </div>
+
+            <div class="card">
+                <h3>Overview</h3>
+                <p>A production-style MCP server with an SQLite database backend. Exposes 3 tools: <span
+                        class="tag tag-blue">add_expense</span> <span class="tag tag-green">list_expenses</span> <span
+                        class="tag tag-purple">summarize</span> and 1 resource: <span
+                        class="tag tag-yellow">expense:///categories</span></p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-filename">main.py — Expense Tracker (initial version)</span>
+                    <span class="code-lang">Python</span>
+                </div>
+                <pre><span class="kw">from</span> <span class="cls">fastmcp</span> <span class="kw">import</span> <span class="cls">FastMCP</span>
+<span class="kw">import</span> <span class="var">os</span>
+<span class="kw">import</span> <span class="var">sqlite3</span>
+
+<span class="var">DB_PATH</span> = <span class="var">os</span>.<span class="var">path</span>.<span class="fn">join</span>(<span class="var">os</span>.<span class="var">path</span>.<span class="fn">dirname</span>(__file__), <span class="str">"expenses.db"</span>)
+<span class="var">CATEGORIES_PATH</span> = <span class="var">os</span>.<span class="var">path</span>.<span class="fn">join</span>(<span class="var">os</span>.<span class="var">path</span>.<span class="fn">dirname</span>(__file__), <span class="str">"categories.json"</span>)
+
+<span class="var">mcp</span> = <span class="cls">FastMCP</span>(<span class="str">"ExpenseTracker"</span>)
+
+<span class="kw">def</span> <span class="fn">init_db</span>():
+    <span class="kw">with</span> <span class="var">sqlite3</span>.<span class="fn">connect</span>(<span class="var">DB_PATH</span>) <span class="kw">as</span> <span class="var">c</span>:
+        <span class="var">c</span>.<span class="fn">execute</span>(<span class="str">"""
+            CREATE TABLE IF NOT EXISTS expenses(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT NOT NULL,
+                amount REAL NOT NULL,
+                category TEXT NOT NULL,
+                subcategory TEXT DEFAULT '',
+                note TEXT DEFAULT ''
+            )
+        """</span>)</pre>
+            </div>
+
+            <div class="card yellow">
+                <h3>Database Schema</h3>
+                <ul>
+                    <li><code>id</code> — INTEGER PRIMARY KEY AUTOINCREMENT</li>
+                    <li><code>date</code> — TEXT NOT NULL</li>
+                    <li><code>amount</code> — REAL NOT NULL</li>
+                    <li><code>category</code> — TEXT NOT NULL</li>
+                    <li><code>subcategory</code> — TEXT DEFAULT ''</li>
+                    <li><code>note</code> — TEXT DEFAULT ''</li>
+                </ul>
+            </div>
+
+            <div class="card green">
+                <h3>Default Categories (categories.json)</h3>
+                <p>Food &amp; Dining, Transportation, Shopping, Entertainment, and more — stored as JSON alongside the
+                    server code.</p>
+            </div>
+
+            <div class="callout">
+                <span class="callout-icon">✅</span>
+                <p>After deployment, tested in <strong>Claude Desktop</strong> — asked "can you tell me about all my
+                    expenses in Sept" → Claude called <code>list_expenses</code> tool, confirmed no records yet, then
+                    offered to add expenses.</p>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- SECTION 7: FIXING ISSUES -->
+        <div class="section" id="s7">
+            <div class="section-label">
+                <span class="section-num">07</span>
+                <h2>Fixing Issues in the Remote Server</h2>
+            </div>
+
+            <div class="grid-2">
+                <div class="card red">
+                    <h3>Problem 1: Read-Only Database</h3>
+                    <p>FastMCP Cloud runs in a read-only filesystem. The <code>expenses.db</code> file cannot be written
+                        to at the code directory path.</p>
+                    <br>
+                    <p><strong>Fix:</strong> Use <code>tempfile.gettempdir()</code> to store the DB in a writable temp
+                        directory.</p>
+                </div>
+                <div class="card red">
+                    <h3>Problem 2: Sync / Async Conflict</h3>
+                    <p>FastMCP remote servers run in an <strong>async</strong> environment. Using synchronous
+                        <code>sqlite3</code> causes blocking issues.</p>
+                    <br>
+                    <p><strong>Fix:</strong> Replace <code>sqlite3</code> with <code>aiosqlite</code> and make all DB
+                        functions <code>async</code>.</p>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-filename">main.py — Fixed Version (async + temp dir)</span>
+                    <span class="code-lang">Python</span>
+                </div>
+                <pre><span class="kw">from</span> <span class="cls">fastmcp</span> <span class="kw">import</span> <span class="cls">FastMCP</span>
+<span class="kw">import</span> <span class="var">os</span>
+<span class="kw">import</span> <span class="var">aiosqlite</span>          <span class="cm"># Changed: sqlite3 → aiosqlite</span>
+<span class="kw">import</span> <span class="var">tempfile</span>
+<span class="kw">import</span> <span class="var">asyncio</span>
+
+<span class="cm"># Use temporary directory for writable storage on cloud</span>
+<span class="var">TEMP_DIR</span>  = <span class="var">tempfile</span>.<span class="fn">gettempdir</span>()
+<span class="var">DB_PATH</span>   = <span class="var">os</span>.<span class="var">path</span>.<span class="fn">join</span>(<span class="var">TEMP_DIR</span>, <span class="str">"expenses.db"</span>)
+<span class="var">CATEGORIES_PATH</span> = <span class="var">os</span>.<span class="var">path</span>.<span class="fn">join</span>(<span class="var">os</span>.<span class="var">path</span>.<span class="fn">dirname</span>(__file__), <span class="str">"categories.json"</span>)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Database path: {DB_PATH}"</span>)
+
+<span class="var">mcp</span> = <span class="cls">FastMCP</span>(<span class="str">"ExpenseTracker"</span>)
+
+<span class="kw">async def</span> <span class="fn">init_db</span>():          <span class="cm"># Changed: added async</span>
+    <span class="kw">try</span>:
+        <span class="cm"># Changed: sqlite3.connect → aiosqlite.connect</span>
+        <span class="kw">async with</span> <span class="var">aiosqlite</span>.<span class="fn">connect</span>(<span class="var">DB_PATH</span>) <span class="kw">as</span> <span class="var">c</span>:  <span class="cm"># added async</span>
+            <span class="kw">await</span> <span class="var">c</span>.<span class="fn">execute</span>(<span class="str">"PRAGMA journal_mode=WAL"</span>)  <span class="cm"># added await</span>
+            <span class="kw">await</span> <span class="var">c</span>.<span class="fn">execute</span>(<span class="str">"""
+                CREATE TABLE IF NOT EXISTS expenses(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    date TEXT NOT NULL,
+                    amount REAL NOT NULL,
+                    category TEXT NOT NULL,
+                    subcategory TEXT DEFAULT '',
+                    note TEXT DEFAULT ''
+                )
+            """</span>)                                      <span class="cm"># added await on closing</span>
+            <span class="cm"># Test write access</span>
+            <span class="kw">await</span> <span class="var">c</span>.<span class="fn">execute</span>(<span class="str">"INSERT OR IGNORE INTO expenses"
+                            "(date, amount, category) VALUES ('2000-01-..."</span>)
+
+<span class="cm"># Resource: categories (mime_type changed)</span>
+<span class="kw">@</span><span class="var">mcp</span>.<span class="fn">resource</span>(<span class="str">"expense:///categories"</span>, <span class="var">mime_type</span>=<span class="str">"application/json"</span>)
+<span class="cm"># Changed: expense:// → expense:///</span>
+<span class="kw">def</span> <span class="fn">categories</span>():
+    <span class="kw">try</span>:
+        <span class="cm"># Provide default categories if file doesn't exist</span>
+        <span class="var">default_categories</span> = {
+            <span class="str">"categories"</span>: [
+                <span class="str">"Food & Dining"</span>, <span class="str">"Transportation"</span>,
+                <span class="str">"Shopping"</span>, <span class="str">"Entertainment"</span>, ...
+            ]
+        }</pre>
+            </div>
+
+            <div class="card">
+                <h3>Summary of All Changes</h3>
+                <ul>
+                    <li>Import <code>aiosqlite</code> instead of <code>sqlite3</code></li>
+                    <li>Import <code>tempfile</code> and set <code>DB_PATH</code> to <code>tempfile.gettempdir()</code>
+                    </li>
+                    <li>Add <code>async</code> to all database functions</li>
+                    <li>Replace <code>sqlite3.connect</code> → <code>aiosqlite.connect</code></li>
+                    <li>Add <code>async with</code> context manager for connections</li>
+                    <li>Add <code>await</code> to all <code>.execute()</code> and <code>.fetchall()</code> calls</li>
+                    <li>Change resource URI from <code>expense://</code> → <code>expense:///</code></li>
+                    <li>Add <code>PRAGMA journal_mode=WAL</code> for better concurrency</li>
+                </ul>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-filename">summarize function — async version</span>
+                    <span class="code-lang">Python</span>
+                </div>
+                <pre><span class="kw">async def</span> <span class="fn">summarize</span>(<span class="var">start_date</span>, <span class="var">end_date</span>, <span class="var">category</span>=<span class="cls">None</span>):  <span class="cm"># added async</span>
+    ...
+    <span class="var">cur</span> = <span class="kw">await</span> <span class="var">c</span>.<span class="fn">execute</span>(<span class="var">query</span>, <span class="var">params</span>)         <span class="cm"># added await</span>
+    <span class="var">cols</span> = [<span class="var">d</span>[<span class="num">0</span>] <span class="kw">for</span> <span class="var">d</span> <span class="kw">in</span> <span class="var">cur</span>.<span class="var">description</span>]
+    <span class="kw">return</span> [<span class="fn">dict</span>(<span class="fn">zip</span>(<span class="var">cols</span>, <span class="var">r</span>)) <span class="kw">for</span> <span class="var">r</span> <span class="kw">in</span> <span class="kw">await</span> <span class="var">cur</span>.<span class="fn">fetchall</span>()]  <span class="cm"># added await</span></pre>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- SECTION 8: PROXY SERVER -->
+        <div class="section" id="s8">
+            <div class="section-label">
+                <span class="section-num">08</span>
+                <h2>Proxy Server — Connecting Claude Desktop to Remote MCP</h2>
+            </div>
+
+            <div class="card">
+                <h3>Why a Proxy?</h3>
+                <p>Claude Desktop connects to MCP servers via <strong>STDIO</strong>. Remote MCP servers speak
+                    <strong>HTTP</strong>. A tiny local proxy bridges the gap — it runs locally via STDIO and forwards
+                    all requests to the remote FastMCP Cloud server over HTTP.</p>
+            </div>
+
+            <div class="diagram">
+                <div
+                    style="font-family:'Syne',sans-serif; font-size:13px; color:var(--text-muted); margin-bottom:14px;">
+                    Proxy Architecture</div>
+                <div class="diagram-flow">
+                    <div class="d-box blue">Claude Desktop<br>(CD)</div>
+                    <div class="d-arrow">⟷ STDIO</div>
+                    <div class="d-box purple">Proxy Server<br>(local MCP)</div>
+                    <div class="d-arrow">HTTP ⟷</div>
+                    <div class="d-box green">Remote MCP<br>(FastMCP Cloud)</div>
+                </div>
+                <div class="diagram-note">FastMCP Cloud uses Streamable HTTP by default — use the /mcp URL directly
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-filename">proxy-server/main.py</span>
+                    <span class="code-lang">Python</span>
+                </div>
+                <pre><span class="kw">from</span> <span class="cls">fastmcp</span> <span class="kw">import</span> <span class="cls">FastMCP</span>
+
+<span class="cm"># Create a proxy to your remote FastMCP Cloud server</span>
+<span class="cm"># FastMCP Cloud uses Streamable HTTP (default), so just use the /mcp URL</span>
+<span class="var">mcp</span> = <span class="cls">FastMCP</span>.<span class="fn">as_proxy</span>(
+    <span class="str">"https://lovely-silver-newt.fastmcp.app/mcp"</span>,  <span class="cm"># Standard FastMCP Cloud URL</span>
+    <span class="var">name</span>=<span class="str">"Nitish Server Proxy"</span>
+)
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="cm"># This runs via STDIO, which Claude Desktop can connect to</span>
+    <span class="var">mcp</span>.<span class="fn">run</span>()</pre>
+            </div>
+
+            <div class="grid-2">
+                <div class="card green">
+                    <h3>How to Add to Claude Desktop</h3>
+                    <p>Configure <code>claude_desktop_config.json</code> to run this proxy script. Claude Desktop
+                        launches it as a subprocess via STDIO.</p>
+                    <br><span class="tag tag-green">Manual connector</span>
+                </div>
+                <div class="card purple">
+                    <h3>FastMCP.as_proxy()</h3>
+                    <p>One-line method to wrap any remote FastMCP HTTP server as a local STDIO-compatible proxy. No
+                        boilerplate needed.</p>
+                    <br><span class="tag tag-purple">FastMCP feature</span>
+                </div>
+            </div>
+
+            <div class="callout">
+                <span class="callout-icon">⚡</span>
+                <p><strong>Result:</strong> Claude Desktop shows the remote server's tools (Add expense, List expenses,
+                    Summarize) as if they were local — but they actually run in the cloud!</p>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- QUICK REFERENCE -->
+        <div class="section">
+            <div class="section-label">
+                <span class="section-num">REF</span>
+                <h2>Quick Reference</h2>
+            </div>
+            <div class="grid-2">
+                <div class="code-block">
+                    <div class="code-header"><span class="code-filename">Key Commands</span><span
+                            class="code-lang">bash</span></div>
+                    <pre><span class="cm"># Setup</span>
+uv init .
+uv add fastmcp
+uv add aiosqlite   <span class="cm"># for async DB</span>
+
+<span class="cm"># Run locally</span>
+uv run main.py
+
+<span class="cm"># Git workflow</span>
+git init
+git add .
+git commit -m <span class="str">"message"</span>
+git push -u origin main</pre>
+                </div>
+                <div class="code-block">
+                    <div class="code-header"><span class="code-filename">Key Decorators</span><span
+                            class="code-lang">Python</span></div>
+                    <pre><span class="cm"># Expose a tool</span>
+<span class="kw">@</span>mcp.tool
+<span class="kw">async def</span> <span class="fn">my_tool</span>(...):
+    ...
+
+<span class="cm"># Expose a resource</span>
+<span class="kw">@</span>mcp.resource(<span class="str">"uri://path"</span>)
+<span class="kw">def</span> <span class="fn">my_resource</span>():
+    ...
+
+<span class="cm"># Create proxy server</span>
+mcp = FastMCP.as_proxy(<span class="str">"url"</span>)</pre>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        How to Build &amp; Deploy Remote MCP Servers · MCP Trilogy · CampusX · Sep 2025 · Notes compiled from 21
+        screenshots
+    </div>
+
+</body>
+
+</html>
