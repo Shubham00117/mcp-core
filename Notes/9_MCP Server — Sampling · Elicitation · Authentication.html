@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Server — Sampling, Elicitation & Authentication</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --surface: #111827;
+            --surface2: #1a2235;
+            --border: #1e2d45;
+            --accent: #00d4ff;
+            --accent2: #7c3aed;
+            --accent3: #10b981;
+            --accent4: #f59e0b;
+            --accent5: #ef4444;
+            --accent6: #ec4899;
+            --text: #e2e8f0;
+            --text-muted: #64748b;
+            --text-dim: #94a3b8;
+            --code-bg: #0d1117;
+            --code-border: #21262d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #0a0e1a 0%, #0f1622 60%, #0d1a2e 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 44px 48px 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -60px;
+            width: 360px;
+            height: 360px;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.07) 0%, transparent 70%);
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            left: 20%;
+            width: 260px;
+            height: 260px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.06) 0%, transparent 70%);
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.25);
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 3px;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(22px, 3.8vw, 42px);
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .header h1 span.s1 {
+            color: var(--accent);
+        }
+
+        .header h1 span.s2 {
+            color: #a78bfa;
+        }
+
+        .header h1 span.s3 {
+            color: var(--accent3);
+        }
+
+        .header-sub {
+            margin-top: 10px;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 300;
+        }
+
+        .toc-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+
+        .toc-pill {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            font-size: 12px;
+            padding: 5px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'JetBrains Mono', monospace;
+            text-decoration: none;
+        }
+
+        .toc-pill:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.3);
+            color: var(--accent);
+        }
+
+        .toc-pill.p {
+            color: #a78bfa;
+        }
+
+        .toc-pill.p:hover {
+            background: rgba(124, 58, 237, 0.1);
+            border-color: rgba(124, 58, 237, 0.3);
+            color: #a78bfa;
+        }
+
+        .toc-pill.g {
+            color: var(--accent3);
+        }
+
+        .toc-pill.g:hover {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: var(--accent3);
+        }
+
+        /* LAYOUT */
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        /* TOPIC HEADER */
+        .topic-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .topic-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .icon-blue {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .icon-purple {
+            background: rgba(124, 58, 237, 0.12);
+            border: 1px solid rgba(124, 58, 237, 0.25);
+        }
+
+        .icon-green {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .topic-title h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .topic-title h2.blue {
+            color: var(--accent);
+        }
+
+        .topic-title h2.purple {
+            color: #a78bfa;
+        }
+
+        .topic-title h2.green {
+            color: var(--accent3);
+        }
+
+        .topic-title p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        /* SECTION */
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .section-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 3px 9px;
+            border-radius: 3px;
+            letter-spacing: 0.08em;
+        }
+
+        .num-blue {
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            color: var(--accent);
+        }
+
+        .num-purple {
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            color: #a78bfa;
+        }
+
+        .num-green {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--accent3);
+        }
+
+        .section h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            border-radius: 3px 0 0 3px;
+        }
+
+        .card.blue::before {
+            background: var(--accent);
+        }
+
+        .card.purple::before {
+            background: #a78bfa;
+        }
+
+        .card.green::before {
+            background: var(--accent3);
+        }
+
+        .card.yellow::before {
+            background: var(--accent4);
+        }
+
+        .card.red::before {
+            background: var(--accent5);
+        }
+
+        .card.pink::before {
+            background: var(--accent6);
+        }
+
+        .card h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .card p,
+        .card li {
+            font-size: 13px;
+            color: var(--text-dim);
+            line-height: 1.65;
+        }
+
+        .card ul {
+            padding-left: 16px;
+        }
+
+        .card li {
+            margin-bottom: 4px;
+        }
+
+        /* GRID */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 680px) {
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* CODE BLOCK */
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 16px;
+            background: #161b22;
+            border-bottom: 1px solid var(--code-border);
+        }
+
+        .code-filename {
+            font-size: 12px;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .code-lang {
+            font-size: 10px;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .code-block pre {
+            padding: 16px 20px;
+            font-size: 12.5px;
+            line-height: 1.7;
+            overflow-x: auto;
+            color: #c9d1d9;
+        }
+
+        .kw {
+            color: #ff79c6;
+        }
+
+        .fn {
+            color: #50fa7b;
+        }
+
+        .str {
+            color: #f1fa8c;
+        }
+
+        .cm {
+            color: #6272a4;
+            font-style: italic;
+        }
+
+        .num {
+            color: #bd93f9;
+        }
+
+        .cls {
+            color: #8be9fd;
+        }
+
+        .var {
+            color: #f8f8f2;
+        }
+
+        .prop {
+            color: #ffb86c;
+        }
+
+        /* FLOW DIAGRAM */
+        .diagram {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 24px 20px;
+            margin-bottom: 12px;
+        }
+
+        .diagram-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            flex-wrap: wrap;
+            row-gap: 10px;
+        }
+
+        .flow-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .d-box {
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            border-radius: 7px;
+            padding: 9px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .d-box.blue {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0, 212, 255, 0.07);
+        }
+
+        .d-box.purple {
+            border-color: #a78bfa;
+            color: #a78bfa;
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        .d-box.green {
+            border-color: var(--accent3);
+            color: var(--accent3);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .d-box.yellow {
+            border-color: var(--accent4);
+            color: var(--accent4);
+            background: rgba(245, 158, 11, 0.08);
+        }
+
+        .d-box.red {
+            border-color: var(--accent5);
+            color: var(--accent5);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .d-arrow {
+            padding: 0 8px;
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+
+        .d-arrow.down {
+            padding: 4px 0;
+            display: block;
+            text-align: center;
+        }
+
+        .diagram-note {
+            margin-top: 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center;
+        }
+
+        /* INLINE CODE */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            background: rgba(0, 212, 255, 0.07);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            color: var(--accent);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        code.purple {
+            background: rgba(124, 58, 237, 0.08);
+            border-color: rgba(124, 58, 237, 0.2);
+            color: #a78bfa;
+        }
+
+        code.green {
+            background: rgba(16, 185, 129, 0.07);
+            border-color: rgba(16, 185, 129, 0.18);
+            color: var(--accent3);
+        }
+
+        /* CALLOUT */
+        .callout {
+            display: flex;
+            gap: 12px;
+            border-radius: 8px;
+            padding: 13px 16px;
+            margin-bottom: 12px;
+            align-items: flex-start;
+        }
+
+        .callout-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .callout p {
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        .callout.yellow {
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .callout.yellow strong {
+            color: #fbbf24;
+        }
+
+        .callout.blue {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .callout.blue strong {
+            color: var(--accent);
+        }
+
+        .callout.green {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .callout.green strong {
+            color: var(--accent3);
+        }
+
+        .callout.red {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .callout.red strong {
+            color: #f87171;
+        }
+
+        /* TAG */
+        .tag {
+            display: inline-block;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 2px 8px;
+            border-radius: 3px;
+            margin: 2px 3px 2px 0;
+        }
+
+        .tag-blue {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .tag-green {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent3);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .tag-purple {
+            background: rgba(124, 58, 237, 0.1);
+            color: #a78bfa;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        .tag-yellow {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent4);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .tag-red {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        /* DIVIDER */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 48px 0;
+        }
+
+        /* COMPARE */
+        .compare {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .compare-col {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .compare-head {
+            padding: 11px 18px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .compare-head.blue {
+            background: rgba(0, 212, 255, 0.08);
+            color: var(--accent);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.15);
+        }
+
+        .compare-head.red {
+            background: rgba(239, 68, 68, 0.08);
+            color: #f87171;
+            border-bottom: 1px solid rgba(239, 68, 68, 0.15);
+        }
+
+        .compare-head.green {
+            background: rgba(16, 185, 129, 0.08);
+            color: var(--accent3);
+            border-bottom: 1px solid rgba(16, 185, 129, 0.15);
+        }
+
+        .compare-body {
+            padding: 13px 18px;
+        }
+
+        .compare-body li {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+            list-style: none;
+            padding-left: 14px;
+            position: relative;
+        }
+
+        .compare-body li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--text-muted);
+            font-size: 11px;
+            top: 1px;
+        }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            padding: 28px;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="badge">MCP Trilogy · CampusX · Advanced Topics</div>
+        <h1>MCP Server —<br>
+            <span class="s1">Sampling</span> ·
+            <span class="s2">Elicitation</span> ·
+            <span class="s3">Authentication</span>
+        </h1>
+        <div class="header-sub">Model Context Protocol — Advanced server features explained with code & diagrams</div>
+        <div class="toc-bar">
+            <a class="toc-pill" href="#sampling">Sampling</a>
+            <a class="toc-pill" href="#s-what">What is it?</a>
+            <a class="toc-pill" href="#s-code">Code</a>
+            <a class="toc-pill p" href="#elicitation">Elicitation</a>
+            <a class="toc-pill p" href="#e-flow">Flow</a>
+            <a class="toc-pill p" href="#e-code">Code</a>
+            <a class="toc-pill g" href="#auth">Authentication</a>
+            <a class="toc-pill g" href="#a-types">Auth Types</a>
+            <a class="toc-pill g" href="#a-code">Code</a>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- ============================================================ -->
+        <!--  TOPIC 1: SAMPLING                                           -->
+        <!-- ============================================================ -->
+        <div id="sampling">
+            <div class="topic-header">
+                <div class="topic-icon icon-blue">🤖</div>
+                <div class="topic-title">
+                    <h2 class="blue">1. Sampling</h2>
+                    <p>Servers asking the LLM to generate text — server-initiated AI calls</p>
+                </div>
+            </div>
+
+            <!-- What is Sampling -->
+            <div class="section" id="s-what">
+                <div class="section-label">
+                    <span class="section-num num-blue">CONCEPT</span>
+                    <h3>What is Sampling?</h3>
+                </div>
+
+                <div class="callout blue">
+                    <span class="callout-icon">💡</span>
+                    <p><strong>Definition:</strong> Sampling lets an MCP <em>server</em> request the <em>client's
+                            LLM</em> to generate text. Instead of the client always calling the server — the server
+                        calls back to the LLM for AI completions. This enables <strong>agentic loops</strong> where the
+                        server can "think" using the LLM.</p>
+                </div>
+
+                <div class="diagram">
+                    <div class="diagram-title">Normal Flow vs Sampling Flow</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                        <div>
+                            <div
+                                style="font-size:11px;color:var(--text-muted);margin-bottom:10px;font-family:'JetBrains Mono',monospace;text-align:center;">
+                                NORMAL (client → server)</div>
+                            <div class="flow" style="flex-direction:column;gap:6px;">
+                                <div class="d-box blue" style="width:100%;text-align:center;">LLM / Client App</div>
+                                <div class="d-arrow down">↓ tool call</div>
+                                <div class="d-box" style="width:100%;text-align:center;">MCP Server</div>
+                                <div class="d-arrow down">↓ result</div>
+                                <div class="d-box blue" style="width:100%;text-align:center;">LLM / Client App</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div
+                                style="font-size:11px;color:var(--accent);margin-bottom:10px;font-family:'JetBrains Mono',monospace;text-align:center;">
+                                SAMPLING (server → LLM)</div>
+                            <div class="flow" style="flex-direction:column;gap:6px;">
+                                <div class="d-box blue" style="width:100%;text-align:center;">LLM / Client App</div>
+                                <div class="d-arrow down">↓ tool call</div>
+                                <div class="d-box yellow" style="width:100%;text-align:center;">MCP Server</div>
+                                <div class="d-arrow down">↑ sampling request</div>
+                                <div class="d-box blue" style="width:100%;text-align:center;">LLM generates text</div>
+                                <div class="d-arrow down">↓ completion back</div>
+                                <div class="d-box yellow" style="width:100%;text-align:center;">Server uses result</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="diagram-note">Human in the loop — client can review/approve LLM requests before
+                        execution</div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card blue">
+                        <h4>Why use Sampling?</h4>
+                        <ul>
+                            <li>Server needs LLM to <strong>summarise, classify, or generate</strong> data mid-tool</li>
+                            <li>Build <strong>agentic workflows</strong> inside the server</li>
+                            <li>Multi-step reasoning — server can chain LLM calls</li>
+                            <li>Server doesn't need its own LLM API key</li>
+                        </ul>
+                    </div>
+                    <div class="card yellow">
+                        <h4>Key Constraint</h4>
+                        <ul>
+                            <li>Only available in <strong>local (STDIO)</strong> servers that support it</li>
+                            <li>Client must explicitly <strong>grant sampling permission</strong></li>
+                            <li>Human-in-the-loop — client reviews the request</li>
+                            <li>Not all MCP clients support sampling</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sampling Parameters -->
+            <div class="section">
+                <div class="section-label">
+                    <span class="section-num num-blue">PARAMS</span>
+                    <h3>Sampling Request Parameters</h3>
+                </div>
+
+                <div class="grid-3">
+                    <div class="card blue">
+                        <h4>messages</h4>
+                        <p>List of conversation messages (role + content) sent to the LLM for completion.</p>
+                    </div>
+                    <div class="card blue">
+                        <h4>maxTokens</h4>
+                        <p>Maximum number of tokens the LLM should generate in the response.</p>
+                    </div>
+                    <div class="card blue">
+                        <h4>systemPrompt</h4>
+                        <p>Optional system prompt to guide the LLM's behaviour for this specific request.</p>
+                    </div>
+                    <div class="card blue">
+                        <h4>temperature</h4>
+                        <p>Controls randomness of the output. 0 = deterministic, 1 = creative.</p>
+                    </div>
+                    <div class="card blue">
+                        <h4>stopSequences</h4>
+                        <p>Array of strings where generation should stop.</p>
+                    </div>
+                    <div class="card blue">
+                        <h4>modelPreferences</h4>
+                        <p>Hints about which model to use (cost, speed, intelligence priorities).</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sampling Code -->
+            <div class="section" id="s-code">
+                <div class="section-label">
+                    <span class="section-num num-blue">CODE</span>
+                    <h3>Sampling in FastMCP</h3>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header"><span class="code-filename">sampling_server.py</span><span
+                            class="code-lang">Python</span></div>
+                    <pre><span class="kw">from</span> <span class="cls">fastmcp</span> <span class="kw">import</span> <span class="cls">FastMCP</span>
+<span class="kw">from</span> <span class="cls">fastmcp.sampling</span> <span class="kw">import</span> <span class="cls">SamplingMessage</span>
+
+<span class="var">mcp</span> = <span class="cls">FastMCP</span>(<span class="str">"SamplingDemo"</span>)
+
+<span class="kw">@</span><span class="var">mcp</span>.<span class="fn">tool</span>()
+<span class="kw">async def</span> <span class="fn">summarise_text</span>(<span class="var">text</span>: <span class="cls">str</span>, <span class="var">ctx</span>) -> <span class="cls">str</span>:
+    <span class="str">"""Use the LLM to summarise the provided text."""</span>
+
+    <span class="cm"># Server requests the client's LLM to generate a summary</span>
+    <span class="var">result</span> = <span class="kw">await</span> <span class="var">ctx</span>.<span class="fn">sample</span>(
+        <span class="var">messages</span>=[
+            <span class="cls">SamplingMessage</span>(
+                <span class="var">role</span>=<span class="str">"user"</span>,
+                <span class="var">content</span>=<span class="fn">f</span><span class="str">"Please summarise this in 2 sentences:\n\n{text}"</span>
+            )
+        ],
+        <span class="var">system_prompt</span>=<span class="str">"You are a concise summarisation assistant."</span>,
+        <span class="var">max_tokens</span>=<span class="num">100</span>
+    )
+
+    <span class="kw">return</span> <span class="var">result</span>.<span class="var">content</span>.<span class="var">text</span>
+
+
+<span class="kw">@</span><span class="var">mcp</span>.<span class="fn">tool</span>()
+<span class="kw">async def</span> <span class="fn">classify_expense</span>(<span class="var">description</span>: <span class="cls">str</span>, <span class="var">ctx</span>) -> <span class="cls">str</span>:
+    <span class="str">"""Ask LLM to classify an expense into a category."""</span>
+
+    <span class="var">result</span> = <span class="kw">await</span> <span class="var">ctx</span>.<span class="fn">sample</span>(
+        <span class="var">messages</span>=[
+            <span class="cls">SamplingMessage</span>(
+                <span class="var">role</span>=<span class="str">"user"</span>,
+                <span class="var">content</span>=<span class="fn">f</span><span class="str">"Classify this expense: '{description}'. "</span>
+                         <span class="str">"Reply with ONLY one word: Food/Travel/Shopping/Bills/Other"</span>
+            )
+        ],
+        <span class="var">max_tokens</span>=<span class="num">10</span>,
+        <span class="var">temperature</span>=<span class="num">0</span>      <span class="cm"># deterministic</span>
+    )
+
+    <span class="kw">return</span> <span class="var">result</span>.<span class="var">content</span>.<span class="var">text</span>.<span class="fn">strip</span>()
+
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="var">mcp</span>.<span class="fn">run</span>()   <span class="cm"># STDIO transport (required for sampling)</span></pre>
+                </div>
+
+                <div class="callout yellow">
+                    <span class="callout-icon">⚠️</span>
+                    <p><strong>ctx parameter:</strong> The tool function must accept <code>ctx</code> as a parameter.
+                        This is the MCP context object that provides access to <code>ctx.sample()</code>,
+                        <code>ctx.log()</code>, and other server-side capabilities.</p>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card green">
+                        <h4>Sampling Result Object</h4>
+                        <ul>
+                            <li><code>result.content.text</code> — the generated text</li>
+                            <li><code>result.model</code> — which model was used</li>
+                            <li><code>result.stopReason</code> — why generation stopped</li>
+                            <li><code>result.role</code> — always "assistant"</li>
+                        </ul>
+                    </div>
+                    <div class="card purple">
+                        <h4>Use Cases</h4>
+                        <ul>
+                            <li>Auto-classify user input</li>
+                            <li>Summarise retrieved documents</li>
+                            <li>Generate structured output from raw data</li>
+                            <li>Multi-step agent reasoning inside tools</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ============================================================ -->
+        <!--  TOPIC 2: ELICITATION                                        -->
+        <!-- ============================================================ -->
+        <div id="elicitation">
+            <div class="topic-header">
+                <div class="topic-icon icon-purple">🙋</div>
+                <div class="topic-title">
+                    <h2 class="purple">2. Elicitation</h2>
+                    <p>Servers asking users for additional information during tool execution</p>
+                </div>
+            </div>
+
+            <!-- What is Elicitation -->
+            <div class="section">
+                <div class="section-label">
+                    <span class="section-num num-purple">CONCEPT</span>
+                    <h3>What is Elicitation?</h3>
+                </div>
+
+                <div class="callout" style="background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.2);">
+                    <span class="callout-icon">💡</span>
+                    <p style="color:var(--text-dim);"><strong style="color:#a78bfa;">Definition:</strong> Elicitation
+                        allows an MCP server to <strong style="color:#a78bfa;">pause mid-execution</strong> and ask the
+                        human user for more information. The server sends a structured form/question to the client,
+                        waits for user input, then continues with the provided data.</p>
+                </div>
+
+                <div class="diagram">
+                    <div class="diagram-title">Elicitation Flow</div>
+                    <div class="flow" style="flex-direction:column;gap:6px;max-width:400px;margin:0 auto;">
+                        <div class="d-box blue" style="width:100%;text-align:center;">User sends prompt to LLM</div>
+                        <div class="d-arrow down">↓</div>
+                        <div class="d-box purple" style="width:100%;text-align:center;">LLM calls MCP tool</div>
+                        <div class="d-arrow down">↓</div>
+                        <div class="d-box yellow" style="width:100%;text-align:center;">Tool needs more info → elicit()
+                        </div>
+                        <div class="d-arrow down">↓ sends form to client</div>
+                        <div class="d-box blue" style="width:100%;text-align:center;">User fills in the form / answers
+                        </div>
+                        <div class="d-arrow down">↓ response back to server</div>
+                        <div class="d-box purple" style="width:100%;text-align:center;">Tool continues with user data
+                        </div>
+                        <div class="d-arrow down">↓</div>
+                        <div class="d-box green" style="width:100%;text-align:center;">Final result returned to LLM
+                        </div>
+                    </div>
+                    <div class="diagram-note">Server pauses — waits for human — then resumes. True human-in-the-loop.
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card purple">
+                        <h4>Why use Elicitation?</h4>
+                        <ul>
+                            <li>Tool needs info that wasn't in the original prompt</li>
+                            <li>Collect <strong>confirmation</strong> before destructive actions</li>
+                            <li>Ask for <strong>credentials or preferences</strong> at runtime</li>
+                            <li>Interactive multi-step workflows</li>
+                            <li>Avoid guessing — ask the user directly</li>
+                        </ul>
+                    </div>
+                    <div class="card yellow">
+                        <h4>Elicitation vs Sampling</h4>
+                        <ul>
+                            <li><strong>Sampling</strong> → asks the <em>LLM</em> for more content</li>
+                            <li><strong>Elicitation</strong> → asks the <em>human user</em> for more input</li>
+                            <li>Both pause the tool mid-execution</li>
+                            <li>Both need client support to work</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Elicitation Schema -->
+            <div class="section">
+                <div class="section-label">
+                    <span class="section-num num-purple">SCHEMA</span>
+                    <h3>Elicitation Request Structure</h3>
+                </div>
+
+                <div class="card purple">
+                    <h4>Request Fields</h4>
+                    <ul>
+                        <li><code class="purple">message</code> — human-readable prompt shown to the user</li>
+                        <li><code class="purple">requestedSchema</code> — JSON Schema defining what fields to collect
+                        </li>
+                        <li>Supports types: <code class="purple">string</code>, <code class="purple">number</code>,
+                            <code class="purple">boolean</code>, <code class="purple">enum</code></li>
+                        <li>Can mark fields as <code class="purple">required</code></li>
+                    </ul>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card purple">
+                        <h4>Response: action field</h4>
+                        <ul>
+                            <li><code class="purple">"submit"</code> — user filled the form ✅</li>
+                            <li><code class="purple">"cancel"</code> — user dismissed the form ❌</li>
+                            <li><code class="purple">"decline"</code> — user refused to provide info 🚫</li>
+                        </ul>
+                    </div>
+                    <div class="card purple">
+                        <h4>Response: content field</h4>
+                        <ul>
+                            <li>Dict of field names → user-entered values</li>
+                            <li>Only present when <code class="purple">action == "submit"</code></li>
+                            <li>Server should always check action before using content</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Elicitation Code -->
+            <div class="section" id="e-code">
+                <div class="section-label">
+                    <span class="section-num num-purple">CODE</span>
+                    <h3>Elicitation in FastMCP</h3>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header"><span class="code-filename">elicitation_server.py</span><span
+                            class="code-lang">Python</span></div>
+                    <pre><span class="kw">from</span> <span class="cls">fastmcp</span> <span class="kw">import</span> <span class="cls">FastMCP</span>
+
+<span class="var">mcp</span> = <span class="cls">FastMCP</span>(<span class="str">"ElicitationDemo"</span>)
+
+<span class="kw">@</span><span class="var">mcp</span>.<span class="fn">tool</span>()
+<span class="kw">async def</span> <span class="fn">book_meeting</span>(<span class="var">topic</span>: <span class="cls">str</span>, <span class="var">ctx</span>) -> <span class="cls">str</span>:
+    <span class="str">"""Book a meeting — asks user for date and attendees."""</span>
+
+    <span class="cm"># Pause and ask user for additional details</span>
+    <span class="var">response</span> = <span class="kw">await</span> <span class="var">ctx</span>.<span class="fn">elicit</span>(
+        <span class="var">message</span>=<span class="fn">f</span><span class="str">"Please provide meeting details for: {topic}"</span>,
+        <span class="var">schema</span>={
+            <span class="str">"type"</span>: <span class="str">"object"</span>,
+            <span class="str">"properties"</span>: {
+                <span class="str">"date"</span>: {
+                    <span class="str">"type"</span>: <span class="str">"string"</span>,
+                    <span class="str">"description"</span>: <span class="str">"Meeting date (YYYY-MM-DD)"</span>
+                },
+                <span class="str">"attendees"</span>: {
+                    <span class="str">"type"</span>: <span class="str">"string"</span>,
+                    <span class="str">"description"</span>: <span class="str">"Comma-separated email list"</span>
+                },
+                <span class="str">"duration_mins"</span>: {
+                    <span class="str">"type"</span>: <span class="str">"number"</span>,
+                    <span class="str">"description"</span>: <span class="str">"Duration in minutes"</span>
+                }
+            },
+            <span class="str">"required"</span>: [<span class="str">"date"</span>, <span class="str">"attendees"</span>]
+        }
+    )
+
+    <span class="cm"># Always check what the user did</span>
+    <span class="kw">if</span> <span class="var">response</span>.<span class="var">action</span> == <span class="str">"cancel"</span>:
+        <span class="kw">return</span> <span class="str">"Meeting booking cancelled by user."</span>
+
+    <span class="kw">if</span> <span class="var">response</span>.<span class="var">action</span> == <span class="str">"decline"</span>:
+        <span class="kw">return</span> <span class="str">"User declined to provide details."</span>
+
+    <span class="cm"># action == "submit" — use the data</span>
+    <span class="var">data</span> = <span class="var">response</span>.<span class="var">content</span>
+    <span class="kw">return</span> (
+        <span class="fn">f</span><span class="str">"✅ Meeting booked!\n"</span>
+        <span class="fn">f</span><span class="str">"Topic: {topic}\n"</span>
+        <span class="fn">f</span><span class="str">"Date: {data['date']}\n"</span>
+        <span class="fn">f</span><span class="str">"Attendees: {data['attendees']}\n"</span>
+        <span class="fn">f</span><span class="str">"Duration: {data.get('duration_mins', 30)} mins"</span>
+    )
+
+
+<span class="kw">@</span><span class="var">mcp</span>.<span class="fn">tool</span>()
+<span class="kw">async def</span> <span class="fn">delete_record</span>(<span class="var">record_id</span>: <span class="cls">str</span>, <span class="var">ctx</span>) -> <span class="cls">str</span>:
+    <span class="str">"""Delete a record — ask for confirmation first."""</span>
+
+    <span class="var">response</span> = <span class="kw">await</span> <span class="var">ctx</span>.<span class="fn">elicit</span>(
+        <span class="var">message</span>=<span class="fn">f</span><span class="str">"⚠️ Delete record {record_id}? This cannot be undone."</span>,
+        <span class="var">schema</span>={
+            <span class="str">"type"</span>: <span class="str">"object"</span>,
+            <span class="str">"properties"</span>: {
+                <span class="str">"confirm"</span>: {
+                    <span class="str">"type"</span>: <span class="str">"boolean"</span>,
+                    <span class="str">"description"</span>: <span class="str">"Confirm deletion"</span>
+                }
+            },
+            <span class="str">"required"</span>: [<span class="str">"confirm"</span>]
+        }
+    )
+
+    <span class="kw">if</span> <span class="var">response</span>.<span class="var">action</span> != <span class="str">"submit"</span> <span class="kw">or not</span> <span class="var">response</span>.<span class="var">content</span>.<span class="fn">get</span>(<span class="str">"confirm"</span>):
+        <span class="kw">return</span> <span class="str">"Deletion aborted."</span>
+
+    <span class="cm"># Proceed with deletion</span>
+    <span class="kw">return</span> <span class="fn">f</span><span class="str">"Record {record_id} deleted successfully."</span>
+
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="var">mcp</span>.<span class="fn">run</span>()</pre>
+                </div>
+
+                <div class="callout" style="background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.2);">
+                    <span class="callout-icon">🛡️</span>
+                    <p style="color:var(--text-dim);"><strong style="color:#a78bfa;">Best practice:</strong> Always
+                        check <code class="purple">response.action</code> before accessing <code
+                            class="purple">response.content</code>. If the user cancels or declines,
+                        <code>content</code> may be empty or <code>None</code>.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ============================================================ -->
+        <!--  TOPIC 3: AUTHENTICATION                                     -->
+        <!-- ============================================================ -->
+        <div id="auth">
+            <div class="topic-header">
+                <div class="topic-icon icon-green">🔐</div>
+                <div class="topic-title">
+                    <h2 class="green">3. Authentication</h2>
+                    <p>Securing MCP servers — who can connect and how access is verified</p>
+                </div>
+            </div>
+
+            <!-- What is Auth -->
+            <div class="section">
+                <div class="section-label">
+                    <span class="section-num num-green">CONCEPT</span>
+                    <h3>Why Authentication Matters</h3>
+                </div>
+
+                <div class="callout green">
+                    <span class="callout-icon">🔒</span>
+                    <p><strong>Without auth:</strong> Any client that knows your server URL can connect, call your
+                        tools, and access your data. For remote MCP servers, authentication is <strong>critical</strong>
+                        for production use.</p>
+                </div>
+
+                <div class="grid-3">
+                    <div class="card red">
+                        <h4>Without Auth</h4>
+                        <ul>
+                            <li>Anyone can connect</li>
+                            <li>Tools exposed publicly</li>
+                            <li>Data can be read/modified</li>
+                            <li>No usage tracking</li>
+                        </ul>
+                    </div>
+                    <div class="card green">
+                        <h4>With Auth</h4>
+                        <ul>
+                            <li>Only verified clients connect</li>
+                            <li>Per-user access control</li>
+                            <li>Secure data access</li>
+                            <li>Audit trail possible</li>
+                        </ul>
+                    </div>
+                    <div class="card yellow">
+                        <h4>Local vs Remote</h4>
+                        <ul>
+                            <li>Local (STDIO) — less critical, runs on your machine</li>
+                            <li>Remote (HTTP) — always use auth in production</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auth Types -->
+            <div class="section" id="a-types">
+                <div class="section-label">
+                    <span class="section-num num-green">TYPES</span>
+                    <h3>Authentication Methods</h3>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card green">
+                        <h4>🔑 Bearer Token (API Key)</h4>
+                        <ul>
+                            <li>Simplest method — a secret string</li>
+                            <li>Client sends in HTTP header: <code
+                                    class="green">Authorization: Bearer &lt;token&gt;</code></li>
+                            <li>Server validates the token on every request</li>
+                            <li>Good for: machine-to-machine, dev use</li>
+                        </ul>
+                        <br><span class="tag tag-green">Most Common</span>
+                    </div>
+                    <div class="card green">
+                        <h4>🔐 OAuth 2.0</h4>
+                        <ul>
+                            <li>Industry standard for user-facing apps</li>
+                            <li>Issues short-lived access tokens</li>
+                            <li>Supports scopes (fine-grained permissions)</li>
+                            <li>MCP spec officially recommends OAuth 2.1</li>
+                        </ul>
+                        <br><span class="tag tag-green">Production Standard</span>
+                    </div>
+                    <div class="card green">
+                        <h4>🍪 Session / Cookie</h4>
+                        <ul>
+                            <li>Server issues a session after login</li>
+                            <li>Client stores session ID in cookie</li>
+                            <li>Good for browser-based MCP clients</li>
+                        </ul>
+                    </div>
+                    <div class="card green">
+                        <h4>🔏 mTLS (Mutual TLS)</h4>
+                        <ul>
+                            <li>Both client & server present certificates</li>
+                            <li>Highest security level</li>
+                            <li>Common in enterprise environments</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="diagram">
+                    <div class="diagram-title">OAuth 2.0 Flow with MCP</div>
+                    <div class="flow">
+                        <div class="d-box blue">MCP Client<br>(App)</div>
+                        <div class="d-arrow">→ auth request</div>
+                        <div class="d-box yellow">Auth Server<br>(OAuth)</div>
+                        <div class="d-arrow">→ access token</div>
+                        <div class="d-box blue">MCP Client</div>
+                        <div class="d-arrow">→ token in header</div>
+                        <div class="d-box green">MCP Server</div>
+                    </div>
+                    <div class="diagram-note">MCP Server validates token with Auth Server before processing any tool
+                        calls</div>
+                </div>
+            </div>
+
+            <!-- Auth Code -->
+            <div class="section" id="a-code">
+                <div class="section-label">
+                    <span class="section-num num-green">CODE</span>
+                    <h3>Implementing Authentication in FastMCP</h3>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header"><span class="code-filename">auth_server.py — Bearer Token Auth</span><span
+                            class="code-lang">Python</span></div>
+                    <pre><span class="kw">from</span> <span class="cls">fastmcp</span> <span class="kw">import</span> <span class="cls">FastMCP</span>
+<span class="kw">from</span> <span class="cls">fastmcp.server.auth</span> <span class="kw">import</span> <span class="cls">BearerAuthProvider</span>
+<span class="kw">import</span> <span class="var">os</span>
+
+<span class="cm"># Define valid API keys (in production: load from DB or env)</span>
+<span class="var">VALID_TOKENS</span> = {
+    <span class="str">"user-token-abc123"</span>:  {<span class="str">"user_id"</span>: <span class="str">"alice"</span>, <span class="str">"role"</span>: <span class="str">"admin"</span>},
+    <span class="str">"user-token-xyz789"</span>:  {<span class="str">"user_id"</span>: <span class="str">"bob"</span>,   <span class="str">"role"</span>: <span class="str">"viewer"</span>},
+}
+
+<span class="kw">async def</span> <span class="fn">verify_token</span>(<span class="var">token</span>: <span class="cls">str</span>):
+    <span class="str">"""Return user info dict if valid, raise exception if not."""</span>
+    <span class="kw">if</span> <span class="var">token</span> <span class="kw">not in</span> <span class="var">VALID_TOKENS</span>:
+        <span class="kw">raise</span> <span class="cls">ValueError</span>(<span class="str">"Invalid or expired token"</span>)
+    <span class="kw">return</span> <span class="var">VALID_TOKENS</span>[<span class="var">token</span>]
+
+<span class="cm"># Attach auth provider to server</span>
+<span class="var">mcp</span> = <span class="cls">FastMCP</span>(
+    <span class="str">"SecureServer"</span>,
+    <span class="var">auth</span>=<span class="cls">BearerAuthProvider</span>(<span class="var">verify_token</span>)
+)
+
+<span class="kw">@</span><span class="var">mcp</span>.<span class="fn">tool</span>()
+<span class="kw">async def</span> <span class="fn">get_secret_data</span>(<span class="var">ctx</span>) -> <span class="cls">str</span>:
+    <span class="str">"""Only authenticated users can call this."""</span>
+    <span class="cm"># Access the authenticated user from context</span>
+    <span class="var">user</span> = <span class="var">ctx</span>.<span class="var">auth</span>
+    <span class="kw">return</span> <span class="fn">f</span><span class="str">"Hello {user['user_id']}! Your role is: {user['role']}"</span>
+
+
+<span class="kw">@</span><span class="var">mcp</span>.<span class="fn">tool</span>()
+<span class="kw">async def</span> <span class="fn">admin_only_action</span>(<span class="var">ctx</span>) -> <span class="cls">str</span>:
+    <span class="str">"""Only admins can perform this action."""</span>
+    <span class="var">user</span> = <span class="var">ctx</span>.<span class="var">auth</span>
+    <span class="kw">if</span> <span class="var">user</span>[<span class="str">"role"</span>] != <span class="str">"admin"</span>:
+        <span class="kw">return</span> <span class="str">"❌ Access denied. Admin role required."</span>
+    <span class="kw">return</span> <span class="str">"✅ Admin action executed successfully."</span>
+
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="var">mcp</span>.<span class="fn">run</span>(<span class="var">transport</span>=<span class="str">"http"</span>, <span class="var">host</span>=<span class="str">"0.0.0.0"</span>, <span class="var">port</span>=<span class="num">8000</span>)</pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header"><span class="code-filename">client_with_auth.py — Client sending
+                            token</span><span class="code-lang">Python</span></div>
+                    <pre><span class="var">SERVERS</span> = {
+    <span class="str">"secure"</span>: {
+        <span class="str">"transport"</span>: <span class="str">"streamable_http"</span>,
+        <span class="str">"url"</span>: <span class="str">"https://your-server.fastmcp.app/mcp"</span>,
+        <span class="str">"headers"</span>: {
+            <span class="str">"Authorization"</span>: <span class="str">"Bearer user-token-abc123"</span>
+        }
+    }
+}</pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header"><span class="code-filename">auth_server_oauth.py — OAuth 2.1 (FastMCP
+                            Cloud)</span><span class="code-lang">Python</span></div>
+                    <pre><span class="kw">from</span> <span class="cls">fastmcp</span> <span class="kw">import</span> <span class="cls">FastMCP</span>
+<span class="kw">from</span> <span class="cls">fastmcp.server.auth</span> <span class="kw">import</span> <span class="cls">OAuthProvider</span>
+
+<span class="cm"># FastMCP Cloud handles OAuth infrastructure for you</span>
+<span class="cm"># Just enable it in deployment settings (Authentication: ON)</span>
+<span class="cm"># The server automatically validates JWT tokens from clients</span>
+
+<span class="var">mcp</span> = <span class="cls">FastMCP</span>(
+    <span class="str">"OAuthServer"</span>,
+    <span class="var">auth</span>=<span class="cls">OAuthProvider</span>(
+        <span class="var">issuer_url</span>=<span class="str">"https://auth.fastmcp.app"</span>,    <span class="cm"># FastMCP's auth server</span>
+        <span class="var">required_scopes</span>=[<span class="str">"tools:read"</span>, <span class="str">"tools:write"</span>]
+    )
+)
+
+<span class="kw">@</span><span class="var">mcp</span>.<span class="fn">tool</span>()
+<span class="kw">async def</span> <span class="fn">protected_tool</span>(<span class="var">data</span>: <span class="cls">str</span>, <span class="var">ctx</span>) -> <span class="cls">str</span>:
+    <span class="var">user_id</span> = <span class="var">ctx</span>.<span class="var">auth</span>.<span class="var">subject</span>         <span class="cm"># JWT "sub" claim</span>
+    <span class="var">scopes</span>  = <span class="var">ctx</span>.<span class="var">auth</span>.<span class="var">scopes</span>           <span class="cm"># granted scopes</span>
+    <span class="kw">return</span> <span class="fn">f</span><span class="str">"Processed for user {user_id}"</span></pre>
+                </div>
+
+                <div class="callout red">
+                    <span class="callout-icon">🚨</span>
+                    <p><strong>Never hardcode tokens in code.</strong> Always load from environment variables or a
+                        secrets manager: <code>os.environ["API_TOKEN"]</code> or <code>python-dotenv</code>.</p>
+                </div>
+
+                <!-- FastMCP Cloud Auth Toggle -->
+                <div class="section">
+                    <div class="section-label">
+                        <span class="section-num num-green">CLOUD</span>
+                        <h3>FastMCP Cloud — Authentication Toggle</h3>
+                    </div>
+
+                    <div class="card green">
+                        <h4>During Deployment Configuration</h4>
+                        <ul>
+                            <li>On the deployment page, toggle <strong>Authentication: ON</strong></li>
+                            <li>FastMCP Cloud automatically handles OAuth 2.1 token issuance</li>
+                            <li>Clients must include a valid token in the <code class="green">Authorization</code>
+                                header</li>
+                            <li><strong>Discoverable: OFF</strong> — hides your server from public listings</li>
+                            <li>Server URL remains the same: <code
+                                    class="green">https://your-name.fastmcp.app/mcp</code></li>
+                        </ul>
+                    </div>
+
+                    <div class="compare">
+                        <div class="compare-col">
+                            <div class="compare-head green">✅ Auth ON (Production)</div>
+                            <ul class="compare-body">
+                                <li>Only clients with valid token connect</li>
+                                <li>Per-user access tracking</li>
+                                <li>Safe to expose sensitive tools</li>
+                                <li>Discoverable should be OFF</li>
+                            </ul>
+                        </div>
+                        <div class="compare-col">
+                            <div class="compare-head red">⚠️ Auth OFF (Dev/Testing)</div>
+                            <ul class="compare-body">
+                                <li>Anyone with the URL can connect</li>
+                                <li>No identity — all users anonymous</li>
+                                <li>Fast to test, unsafe for production</li>
+                                <li>Fine for public demo servers</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- QUICK REFERENCE COMPARISON -->
+        <div class="section">
+            <div class="section-label">
+                <span class="section-num num-blue">REF</span>
+                <h3>Three Features — Side by Side</h3>
+            </div>
+            <div class="grid-3">
+                <div class="card blue">
+                    <h4>🤖 Sampling</h4>
+                    <ul>
+                        <li><strong>Who asks:</strong> Server → LLM</li>
+                        <li><strong>What:</strong> AI text generation</li>
+                        <li><strong>When:</strong> Tool needs AI help mid-run</li>
+                        <li><strong>Method:</strong> <code>ctx.sample()</code></li>
+                        <li><strong>Transport:</strong> STDIO only</li>
+                        <li><strong>Key field:</strong> messages, maxTokens</li>
+                    </ul>
+                </div>
+                <div class="card purple">
+                    <h4>🙋 Elicitation</h4>
+                    <ul>
+                        <li><strong>Who asks:</strong> Server → Human</li>
+                        <li><strong>What:</strong> Structured user input</li>
+                        <li><strong>When:</strong> Tool needs more info</li>
+                        <li><strong>Method:</strong> <code>ctx.elicit()</code></li>
+                        <li><strong>Transport:</strong> STDIO / HTTP</li>
+                        <li><strong>Key field:</strong> schema, response.action</li>
+                    </ul>
+                </div>
+                <div class="card green">
+                    <h4>🔐 Authentication</h4>
+                    <ul>
+                        <li><strong>Who checks:</strong> Server verifies Client</li>
+                        <li><strong>What:</strong> Identity + access control</li>
+                        <li><strong>When:</strong> Every connection/request</li>
+                        <li><strong>Method:</strong> Bearer / OAuth / mTLS</li>
+                        <li><strong>Transport:</strong> HTTP (remote servers)</li>
+                        <li><strong>Key field:</strong> ctx.auth, Authorization header</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        MCP Server — Sampling · Elicitation · Authentication · MCP Trilogy · CampusX · Advanced Topics
+    </div>
+
+</body>
+
+</html>
