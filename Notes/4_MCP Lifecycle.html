@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Lifecycle Notes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f7f8fc;
+            --surface: #ffffff;
+            --surface2: #f0f2f8;
+            --border: #e2e6f0;
+            --accent: #2563eb;
+            --accent2: #059669;
+            --accent3: #dc2626;
+            --accent4: #d97706;
+            --accent5: #7c3aed;
+            --text: #1a1d2e;
+            --muted: #6b7280;
+            --code-bg: #1e2130;
+            --code-text: #e8eaf0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+            line-height: 1.7;
+        }
+
+        .wrapper {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e2130 0%, #2d3561 100%);
+            border-radius: 16px;
+            padding: 40px 48px;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header .tag {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #64d9b0;
+            margin-bottom: 14px;
+            display: block;
+        }
+
+        .header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(28px, 4vw, 46px);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 10px;
+        }
+
+        .header h1 span {
+            color: #6ea8ff;
+        }
+
+        .header p {
+            color: #9ca3c0;
+            font-size: 14px;
+        }
+
+        /* TOC */
+        .toc {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin-bottom: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .toc-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--muted);
+            margin-right: 4px;
+        }
+
+        .toc a {
+            font-family: 'DM Mono', monospace;
+            font-size: 11.5px;
+            color: var(--accent);
+            text-decoration: none;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 4px 12px;
+            border-radius: 20px;
+            transition: all 0.15s;
+        }
+
+        .toc a:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 44px;
+            scroll-margin-top: 20px;
+            animation: fadeUp 0.4s ease both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .section-num {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 3px 10px;
+            border-radius: 4px;
+            background: var(--accent);
+            color: white;
+            white-space: nowrap;
+        }
+
+        .section-num.green {
+            background: var(--accent2);
+        }
+
+        .section-num.red {
+            background: var(--accent3);
+        }
+
+        .section-num.amber {
+            background: var(--accent4);
+        }
+
+        .section-num.purple {
+            background: var(--accent5);
+        }
+
+        .section h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px 22px;
+            margin-bottom: 14px;
+        }
+
+        .card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card p,
+        .card li {
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.75;
+        }
+
+        .card ul {
+            padding-left: 18px;
+        }
+
+        .card li {
+            margin-bottom: 3px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+        }
+
+        @media(max-width:640px) {
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), var(--accent2));
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            position: relative;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 14px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        .timeline-item.step2::before {
+            background: var(--accent2);
+            box-shadow: 0 0 0 2px var(--accent2);
+        }
+
+        .timeline-item.step3::before {
+            background: var(--accent5);
+            box-shadow: 0 0 0 2px var(--accent5);
+        }
+
+        .step-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .step-label.green {
+            color: var(--accent2);
+        }
+
+        .step-label.purple {
+            color: var(--accent5);
+        }
+
+        .timeline-item h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        /* Code */
+        .code-block {
+            background: var(--code-bg);
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            line-height: 1.85;
+            overflow-x: auto;
+            color: var(--code-text);
+            margin: 8px 0;
+        }
+
+        .code-block .k {
+            color: #7da3ff;
+        }
+
+        .code-block .v {
+            color: #64d9b0;
+        }
+
+        .code-block .m {
+            color: #ffd166;
+        }
+
+        .code-block .c {
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .code-block .e {
+            color: #ff6b6b;
+        }
+
+        .code-block .arrow {
+            color: #9ca3c0;
+        }
+
+        /* Info rows */
+        .info-row {
+            display: flex;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+            color: #4b5563;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+
+        .dot.green {
+            background: var(--accent2);
+        }
+
+        .dot.red {
+            background: var(--accent3);
+        }
+
+        .dot.amber {
+            background: var(--accent4);
+        }
+
+        .dot.purple {
+            background: var(--accent5);
+        }
+
+        /* Tags */
+        .tag-pill {
+            display: inline-block;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            padding: 2px 9px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .tag-pill.blue {
+            background: #eff6ff;
+            color: var(--accent);
+            border: 1px solid #bfdbfe;
+        }
+
+        .tag-pill.green {
+            background: #ecfdf5;
+            color: var(--accent2);
+            border: 1px solid #a7f3d0;
+        }
+
+        .tag-pill.red {
+            background: #fef2f2;
+            color: var(--accent3);
+            border: 1px solid #fecaca;
+        }
+
+        .tag-pill.amber {
+            background: #fffbeb;
+            color: var(--accent4);
+            border: 1px solid #fde68a;
+        }
+
+        .tag-pill.purple {
+            background: #f5f3ff;
+            color: var(--accent5);
+            border: 1px solid #ddd6fe;
+        }
+
+        /* Rule card */
+        .rule-card {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid var(--accent3);
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #4b5563;
+            margin-bottom: 10px;
+        }
+
+        .rule-card strong {
+            color: var(--accent3);
+        }
+
+        .note-card {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-left: 4px solid var(--accent4);
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #4b5563;
+            margin-bottom: 10px;
+        }
+
+        /* Error table */
+        .err-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .err-table th {
+            text-align: left;
+            padding: 9px 12px;
+            font-family: 'DM Mono', monospace;
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            border-bottom: 2px solid var(--border);
+            background: #f9fafb;
+        }
+
+        .err-table td {
+            padding: 9px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #4b5563;
+            vertical-align: top;
+        }
+
+        .err-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .err-table code {
+            font-family: 'DM Mono', monospace;
+            font-size: 11.5px;
+            background: #eff6ff;
+            color: var(--accent);
+            padding: 1px 6px;
+            border-radius: 3px;
+        }
+
+        .err-code {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: var(--accent3);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* Capability table */
+        .cap-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+
+        .cap-table th {
+            padding: 8px 14px;
+            font-family: 'DM Mono', monospace;
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: white;
+            background: #2d3561;
+            text-align: left;
+        }
+
+        .cap-table th:first-child {
+            border-radius: 6px 0 0 6px;
+        }
+
+        .cap-table th:last-child {
+            border-radius: 0 6px 6px 0;
+        }
+
+        .cap-table td {
+            padding: 9px 14px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #4b5563;
+        }
+
+        .cap-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .cap-table .cap-name {
+            font-family: 'DM Mono', monospace;
+            font-size: 12.5px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 40px 0;
+        }
+
+        /* Lifecycle stages visual */
+        .lifecycle-flow {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .lf-stage {
+            flex: 1;
+            padding: 16px 14px;
+            text-align: center;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            border-right: 1px solid var(--border);
+        }
+
+        .lf-stage:last-child {
+            border-right: none;
+        }
+
+        .lf-stage .lf-num {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .lf-stage.init {
+            background: #eff6ff;
+            color: var(--accent);
+        }
+
+        .lf-stage.op {
+            background: #ecfdf5;
+            color: var(--accent2);
+        }
+
+        .lf-stage.shut {
+            background: #fef2f2;
+            color: var(--accent3);
+        }
+
+        .lf-arrow {
+            color: var(--muted);
+            font-size: 18px;
+            padding: 0 4px;
+        }
+
+        /* Tool list */
+        .tool-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .tool-row:last-child {
+            border-bottom: none;
+        }
+
+        .tool-name {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            background: #eff6ff;
+            color: var(--accent);
+            padding: 2px 9px;
+            border-radius: 4px;
+            white-space: nowrap;
+            border: 1px solid #bfdbfe;
+            margin-top: 1px;
+        }
+
+        .tool-desc {
+            font-size: 13.5px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+
+        <!-- Header -->
+        <div class="header">
+            <span class="tag">CampusX · MCP Trilogy · Study Notes</span>
+            <h1>MCP <span>Lifecycle</span></h1>
+            <p>The complete sequence of steps governing how a Host and Server establish, use, and end a connection</p>
+        </div>
+
+        <!-- TOC -->
+        <div class="toc">
+            <span class="toc-label">Jump to →</span>
+            <a href="#s1">Lifecycle Overview</a>
+            <a href="#s2">Initialization</a>
+            <a href="#s3">Version Negotiation</a>
+            <a href="#s4">Capability Negotiation</a>
+            <a href="#s5">Operation Phase</a>
+            <a href="#s6">Filesystem Tools</a>
+            <a href="#s7">Tool Calling</a>
+            <a href="#s8">Shutdown</a>
+            <a href="#s9">Pings</a>
+            <a href="#s10">Error Handling</a>
+            <a href="#s11">Timeout</a>
+            <a href="#s12">Cancellation</a>
+            <a href="#s13">Progress</a>
+        </div>
+
+        <!-- 1. Lifecycle Overview -->
+        <div class="section" id="s1">
+            <div class="section-header">
+                <span class="section-num">01</span>
+                <h2>MCP Lifecycle Overview</h2>
+            </div>
+            <div class="card" style="margin-bottom:14px">
+                <p>The <strong>MCP Lifecycle</strong> describes the complete sequence of steps that govern how a Host
+                    (client) and a Server establish, use, and end a connection during a session.</p>
+            </div>
+            <div class="lifecycle-flow">
+                <div class="lf-stage init">
+                    <div class="lf-num">STAGE 1</div>
+                    Initialization
+                </div>
+                <div class="lf-stage op">
+                    <div class="lf-num">STAGE 2</div>
+                    Operation
+                </div>
+                <div class="lf-stage shut">
+                    <div class="lf-num">STAGE 3</div>
+                    Shut Down
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Initialization Phase -->
+        <div class="section" id="s2">
+            <div class="section-header">
+                <span class="section-num green">02</span>
+                <h2>Initialization Phase</h2>
+            </div>
+            <div class="card" style="margin-bottom:14px">
+                <p>The initialization phase <strong>MUST be the first interaction</strong> between client and server. It
+                    establishes protocol version compatibility and exchanges/negotiates capabilities.</p>
+            </div>
+
+            <div class="timeline">
+                <!-- Step 1 -->
+                <div class="timeline-item">
+                    <span class="step-label">Step 1 — Client → Server</span>
+                    <h3>Client sends <code
+                            style="font-family:'DM Mono',monospace;font-size:12px;background:#eff6ff;color:#2563eb;padding:1px 7px;border-radius:3px">initialize</code>
+                        request</h3>
+                    <div class="code-block">
+                        {<br>
+                        &nbsp;&nbsp;<span class="k">"jsonrpc"</span>: <span class="v">"2.0"</span>, <span
+                            class="k">"id"</span>: <span class="v">1</span>, <span class="k">"method"</span>: <span
+                            class="v">"initialize"</span>,<br>
+                        &nbsp;&nbsp;<span class="k">"params"</span>: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"protocolVersion"</span>: <span
+                            class="v">"2025-03-26"</span>, <span class="c">// MCP protocol version</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"capabilities"</span>: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"roots"</span>: { <span
+                            class="k">"listChanged"</span>: <span class="v">true</span> }, <span class="c">// client
+                            capabilities</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"sampling"</span>: {}<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;},<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"clientInfo"</span>: { <span class="k">"name"</span>:
+                        <span class="v">"IDEPlugin"</span>, <span class="k">"version"</span>: <span
+                            class="v">"1.0.0"</span> } <span class="c">// client info</span><br>
+                        &nbsp;&nbsp;}<br>
+                        }
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="timeline-item step2">
+                    <span class="step-label green">Step 2 — Server → Client</span>
+                    <h3>Server replies with its own capabilities</h3>
+                    <div class="code-block">
+                        {<br>
+                        &nbsp;&nbsp;<span class="k">"jsonrpc"</span>: <span class="v">"2.0"</span>, <span
+                            class="k">"id"</span>: <span class="v">1</span>, <span class="k">"result"</span>: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"protocolVersion"</span>: <span
+                            class="v">"2025-03-26"</span>, <span class="c">// negotiated version</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"capabilities"</span>: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"tools"</span>: { <span
+                            class="k">"listChanged"</span>: <span class="v">true</span> },<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"resources"</span>: { <span
+                            class="k">"listChanged"</span>: <span class="v">true</span>, <span
+                            class="k">"subscribe"</span>: <span class="v">true</span> }<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;},<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"serverInfo"</span>: { <span class="k">"name"</span>:
+                        <span class="v">"FileSystemServer"</span>, <span class="k">"version"</span>: <span
+                            class="v">"2.5.1"</span> },<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"instructions"</span>: <span class="v">"Server is ready
+                            to accept commands"</span><br>
+                        &nbsp;&nbsp;}<br>
+                        }
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="timeline-item step3">
+                    <span class="step-label purple">Step 3 — Client → Server</span>
+                    <h3>Client sends <code
+                            style="font-family:'DM Mono',monospace;font-size:12px;background:#f5f3ff;color:#7c3aed;padding:1px 7px;border-radius:3px">initialized</code>
+                        notification</h3>
+                    <div class="code-block">
+                        { <span class="k">"jsonrpc"</span>: <span class="v">"2.0"</span>, <span
+                            class="k">"method"</span>: <span class="v">"notifications/initialized"</span> }
+                    </div>
+                    <p style="font-size:13.5px;color:#059669;font-weight:500;margin-top:10px">✓ Client and Server are
+                        now connected — normal operations can begin.</p>
+                </div>
+            </div>
+
+            <!-- Important Rules -->
+            <div style="margin-top:16px">
+                <div class="rule-card"><strong>Rule 1:</strong> The client SHOULD NOT send requests (other than pings)
+                    before the server has responded to the <code
+                        style="font-family:'DM Mono',monospace;font-size:11.5px">initialize</code> request.</div>
+                <div class="rule-card"><strong>Rule 2:</strong> The server SHOULD NOT send requests (other than pings
+                    and logging) before receiving the <code
+                        style="font-family:'DM Mono',monospace;font-size:11.5px">initialized</code> notification.</div>
+            </div>
+        </div>
+
+        <!-- 3. Version Negotiation -->
+        <div class="section" id="s3">
+            <div class="section-header">
+                <span class="section-num purple">03</span>
+                <h2>Version Negotiation</h2>
+            </div>
+            <div class="card">
+                <p style="margin-bottom:12px">Client proposes its preferred protocol version. Server replies with the
+                    <strong>highest version it supports</strong> from the supported list.</p>
+                <div class="code-block">
+                    <span class="c">// Client proposes</span><br>
+                    <span class="k">"protocolVersion"</span>: <span class="v">"2025-03-26"</span><br><br>
+                    <span class="c">// Server responds with what it supports</span><br>
+                    <span class="k">"protocolVersion"</span>: <span class="v">"2024-11-05"</span><br><br>
+                    <span class="c">// Supported versions on both sides</span><br>
+                    SUPPORTED_PROTOCOL_VERSIONS = [<span class="v">"2025-03-26"</span>, <span
+                        class="v">"2024-11-05"</span>]
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Capability Negotiation -->
+        <div class="section" id="s4">
+            <div class="section-header">
+                <span class="section-num amber">04</span>
+                <h2>Capability Negotiation</h2>
+            </div>
+            <div class="card" style="margin-bottom:14px">
+                <p>Client and server capabilities establish which protocol features will be available during the
+                    session. Only negotiated capabilities may be used.</p>
+            </div>
+            <div class="card">
+                <table class="cap-table">
+                    <tr>
+                        <th>Side</th>
+                        <th>Capability</th>
+                        <th>Sub-capabilities</th>
+                    </tr>
+                    <tr>
+                        <td><span class="tag-pill blue">Client</span></td>
+                        <td class="cap-name">roots</td>
+                        <td>listChanged</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag-pill blue">Client</span></td>
+                        <td class="cap-name">sampling</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag-pill blue">Client</span></td>
+                        <td class="cap-name">elicitation</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag-pill green">Server</span></td>
+                        <td class="cap-name">prompts</td>
+                        <td>listChanged</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag-pill green">Server</span></td>
+                        <td class="cap-name">resources</td>
+                        <td>listChanged, subscribe</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag-pill green">Server</span></td>
+                        <td class="cap-name">tools</td>
+                        <td>listChanged</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag-pill green">Server</span></td>
+                        <td class="cap-name">logging</td>
+                        <td>—</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- 5. Operation Phase -->
+        <div class="section" id="s5">
+            <div class="section-header">
+                <span class="section-num green">05</span>
+                <h2>Operation Phase</h2>
+            </div>
+            <div class="card" style="margin-bottom:14px">
+                <p>During the operation phase, client and server exchange messages <strong>according to the negotiated
+                        capabilities</strong>. Must respect the negotiated protocol version and only use successfully
+                    negotiated capabilities.</p>
+            </div>
+            <div class="card">
+                <h3>Capability Discovery (right after initialized)</h3>
+                <p style="margin-bottom:10px;font-size:13.5px">Immediately after the <code
+                        style="font-family:'DM Mono',monospace;font-size:11.5px">initialized</code> notification, the
+                    client sends discovery requests:</p>
+                <div class="code-block">
+                    <span class="c">// Client discovers available tools</span><br>
+                    { <span class="k">"id"</span>: <span class="v">1</span>, <span class="k">"method"</span>: <span
+                        class="v">"tools/list"</span> }<br><br>
+                    <span class="c">// Client discovers available prompts</span><br>
+                    { <span class="k">"id"</span>: <span class="v">2</span>, <span class="k">"method"</span>: <span
+                        class="v">"prompts/list"</span> }<br><br>
+                    <span class="c">// Client discovers available resources</span><br>
+                    { <span class="k">"id"</span>: <span class="v">3</span>, <span class="k">"method"</span>: <span
+                        class="v">"resources/list"</span> }<br><br>
+                    <span class="c">// Note: prompts/list and resources/list may return -32601 if server doesn't support
+                        them</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Filesystem Server Tools -->
+        <div class="section" id="s6">
+            <div class="section-header">
+                <span class="section-num purple">06</span>
+                <h2>Example: Filesystem Server Tools</h2>
+            </div>
+            <div class="card">
+                <p style="margin-bottom:14px;font-size:13.5px">Tools discovered via <code
+                        style="font-family:'DM Mono',monospace;font-size:11.5px">tools/list</code> on the
+                    secure-filesystem-server:</p>
+                <div class="tool-row"><span class="tool-name">read_file</span><span class="tool-desc">Read complete
+                        contents of a single file. Only works within allowed directories.</span></div>
+                <div class="tool-row"><span class="tool-name">read_multiple_files</span><span class="tool-desc">Read
+                        multiple files simultaneously. More efficient than reading one by one.</span></div>
+                <div class="tool-row"><span class="tool-name">write_file</span><span class="tool-desc">Create a new file
+                        or overwrite an existing file. Requires: path + content.</span></div>
+                <div class="tool-row"><span class="tool-name">edit_file</span><span class="tool-desc">Make line-based
+                        edits to a text file. Returns a git-style diff. Uses oldText + newText.</span></div>
+                <div class="tool-row"><span class="tool-name">create_directory</span><span class="tool-desc">Create a
+                        directory or ensure it exists. Can create nested directories in one operation.</span></div>
+                <div class="tool-row"><span class="tool-name">list_directory</span><span class="tool-desc">Get a
+                        detailed listing with [FILE] and [DIR] labels. Works within allowed directories.</span></div>
+                <div class="tool-row"><span class="tool-name">directory_tree</span><span class="tool-desc">Get a
+                        recursive tree view of files/directories as JSON structure.</span></div>
+                <div class="tool-row"><span class="tool-name">move_file</span><span class="tool-desc">Move or rename
+                        files/directories. Requires: source + destination paths.</span></div>
+                <div class="tool-row"><span class="tool-name">search_files</span><span class="tool-desc">Recursively
+                        search for files and directories. Case-insensitive. Returns full paths.</span></div>
+                <div class="tool-row"><span class="tool-name">list_allowed_directories</span><span
+                        class="tool-desc">Returns directories this server can access. Call this first before accessing
+                        files.</span></div>
+            </div>
+        </div>
+
+        <!-- 7. Tool Calling -->
+        <div class="section" id="s7">
+            <div class="section-header">
+                <span class="section-num">07</span>
+                <h2>Tool Calling</h2>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Request</h3>
+                    <div class="code-block">
+                        {<br>
+                        &nbsp;&nbsp;<span class="k">"jsonrpc"</span>: <span class="v">"2.0"</span>, <span
+                            class="k">"id"</span>: <span class="v">3</span>,<br>
+                        &nbsp;&nbsp;<span class="k">"method"</span>: <span class="v">"tools/call"</span>,<br>
+                        &nbsp;&nbsp;<span class="k">"params"</span>: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"name"</span>: <span class="v">"getFile"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"arguments"</span>: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"owner"</span>: <span
+                            class="v">"campusx-official"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"repo"</span>: <span
+                            class="v">"mcp-examples"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"path"</span>: <span
+                            class="v">"README.md"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"ref"</span>: <span
+                            class="v">"main"</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                        &nbsp;&nbsp;}<br>
+                        }
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Response</h3>
+                    <div class="code-block">
+                        {<br>
+                        &nbsp;&nbsp;<span class="k">"jsonrpc"</span>: <span class="v">"2.0"</span>, <span
+                            class="k">"id"</span>: <span class="v">3</span>,<br>
+                        &nbsp;&nbsp;<span class="k">"result"</span>: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"content"</span>: <span class="v">"# MCP Examples\nThis
+                            repo..."</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"encoding"</span>: <span class="v">"utf-8"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"sha"</span>: <span class="v">"f3c0..."</span><br>
+                        &nbsp;&nbsp;}<br>
+                        }
+                    </div>
+                    <div class="note-card" style="margin-top:12px">
+                        <strong>Practical Demo:</strong> Claude asks user permission before calling tools — showing
+                        "Allow always / Allow once / Decline" dialog.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. Shutdown Phase -->
+        <div class="section" id="s8">
+            <div class="section-header">
+                <span class="section-num red">08</span>
+                <h2>Shutdown Phase</h2>
+            </div>
+            <div class="card" style="margin-bottom:14px">
+                <div class="info-row">
+                    <div class="dot red"></div>
+                    <div>One side (typically the <strong>client</strong>) initiates shutdown.</div>
+                </div>
+                <div class="info-row">
+                    <div class="dot red"></div>
+                    <div><strong>No special JSON-RPC shutdown message</strong> is defined — the transport layer handles
+                        termination.</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3>🖥️ Shutdown in STDIO</h3>
+                    <p style="margin-bottom:10px;font-size:13px"><strong>Client-initiated (SHOULD):</strong></p>
+                    <div class="info-row">
+                        <div class="dot"></div>
+                        <div>Close input stream to the child process (server)</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot"></div>
+                        <div>Wait for server to exit</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot amber"></div>
+                        <div>Send <strong>SIGTERM</strong> if server does not exit in time</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot red"></div>
+                        <div>Send <strong>SIGKILL</strong> if still unresponsive</div>
+                    </div>
+                    <p style="margin-top:12px;font-size:13px"><strong>Server-side (SHOULD):</strong></p>
+                    <div class="info-row" style="margin-top:6px">
+                        <div class="dot green"></div>
+                        <div>Close output stream to the client → Exit process</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>🌐 Shutdown in HTTP</h3>
+                    <p style="margin-bottom:10px;font-size:13px"><strong>Client-initiated (common):</strong></p>
+                    <div class="info-row">
+                        <div class="dot"></div>
+                        <div>The client (Host) <strong>closes the HTTP connection(s)</strong> it opened to the Server.
+                        </div>
+                    </div>
+                    <p style="margin-top:12px;font-size:13px"><strong>Server-initiated (possible):</strong></p>
+                    <div class="info-row" style="margin-top:6px">
+                        <div class="dot amber"></div>
+                        <div>Server may close the connection from its side.</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot amber"></div>
+                        <div>Client must be prepared to detect a dropped connection and handle it (e.g., reconnect).
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. Pings -->
+        <div class="section" id="s9">
+            <div class="section-header">
+                <span class="section-num green">09</span>
+                <h2>Pings</h2>
+            </div>
+            <div class="card" style="margin-bottom:14px">
+                <p><strong>Ping</strong> is a lightweight request/response method defined in MCP. Its purpose is to
+                    check whether the other side (Host or Server) is still alive and the connection is responsive.</p>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Ping Format</h3>
+                    <div class="code-block">
+                        <span class="c">// Request (either side can ping)</span><br>
+                        { <span class="k">"jsonrpc"</span>: <span class="v">"2.0"</span>, <span class="k">"id"</span>:
+                        <span class="v">42</span>, <span class="k">"method"</span>: <span class="v">"ping"</span>
+                        }<br><br>
+                        <span class="c">// Response (empty result)</span><br>
+                        { <span class="k">"jsonrpc"</span>: <span class="v">"2.0"</span>, <span class="k">"id"</span>:
+                        <span class="v">42</span>, <span class="k">"result"</span>: {} }
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>When is Ping used?</h3>
+                    <div class="info-row">
+                        <div class="dot"></div>
+                        <div>Allowed <strong>before</strong> full <code
+                                style="font-family:'DM Mono',monospace;font-size:11.5px">initialize</code> — to check if
+                            the other side is up.</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot green"></div>
+                        <div>Sent <strong>periodically</strong> when there's no activity — prevents connection being
+                            silently dropped by OS, proxies, or firewalls.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. Error Handling -->
+        <div class="section" id="s10">
+            <div class="section-header">
+                <span class="section-num red">10</span>
+                <h2>Error Handling</h2>
+            </div>
+            <div class="card" style="margin-bottom:14px">
+                <p>Error handling in MCP is how the Host (client) and Server signal that <strong>something went
+                        wrong</strong> with a request. MCP inherits <strong>JSON-RPC's standard error object
+                        format</strong>.</p>
+            </div>
+            <div class="grid-2" style="margin-bottom:14px">
+                <div class="card">
+                    <h3>Error Object Structure</h3>
+                    <div class="code-block">
+                        {<br>
+                        &nbsp;&nbsp;<span class="k">"jsonrpc"</span>: <span class="v">"2.0"</span>, <span
+                            class="k">"id"</span>: <span class="v">5</span>,<br>
+                        &nbsp;&nbsp;<span class="k">"error"</span>: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"code"</span>: <span class="e">-32601</span>, <span
+                            class="c">// integer</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"message"</span>: <span class="v">"Method not
+                            found"</span>, <span class="c">// human-readable</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"data"</span>: { <span class="k">"extra"</span>: <span
+                            class="v">"optional info"</span> } <span class="c">// optional</span><br>
+                        &nbsp;&nbsp;}<br>
+                        }
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Causes of Error</h3>
+                    <div class="info-row">
+                        <div class="dot red"></div>
+                        <div>Unsupported or mismatched protocol version</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot red"></div>
+                        <div>Calling a method for a capability that wasn't negotiated</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot red"></div>
+                        <div>Invalid arguments passed to a tool</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot red"></div>
+                        <div>Internal server failure while processing a request</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot red"></div>
+                        <div>Timeout exceeded → client cancels request</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot red"></div>
+                        <div>Malformed JSON-RPC messages</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Common Error Codes</h3>
+                <table class="err-table" style="margin-top:8px">
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Meaning</th>
+                        <th>Example</th>
+                    </tr>
+                    <tr>
+                        <td class="err-code">-32601</td>
+                        <td>Method not found</td>
+                        <td>Called a method that doesn't exist or wasn't advertised</td>
+                        <td>Host calls <code>prompts/list</code> but server never advertised prompts</td>
+                    </tr>
+                    <tr>
+                        <td class="err-code">-32602</td>
+                        <td>Invalid params</td>
+                        <td>Request sent with wrong or missing parameters</td>
+                        <td>Tool expects <code>"path"</code> but client sends <code>"file"</code></td>
+                    </tr>
+                    <tr>
+                        <td class="err-code">-32600</td>
+                        <td>Invalid Request</td>
+                        <td>Malformed JSON-RPC request structure</td>
+                        <td>Missing required fields like <code>jsonrpc</code> or <code>method</code></td>
+                    </tr>
+                    <tr>
+                        <td class="err-code">-32700</td>
+                        <td>Parse error</td>
+                        <td>JSON could not be parsed</td>
+                        <td>Request body is not valid JSON</td>
+                    </tr>
+                    <tr>
+                        <td class="err-code">-32000+</td>
+                        <td>Server-defined errors</td>
+                        <td>Custom errors defined by the server</td>
+                        <td>Auth failure, rate limit exceeded, quota errors</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- 11. Timeout -->
+        <div class="section" id="s11">
+            <div class="section-header">
+                <span class="section-num amber">11</span>
+                <h2>Timeout</h2>
+            </div>
+            <div class="card" style="margin-bottom:14px">
+                <p>Timeout ensures <strong>requests don't hang forever</strong>. It protects against unresponsive or
+                    overloaded servers and ensures resources (memory, CPU) aren't held indefinitely.</p>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Purpose</h3>
+                    <div class="info-row">
+                        <div class="dot amber"></div>
+                        <div>Protects against unresponsive or overloaded servers</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot amber"></div>
+                        <div>Ensures resources (memory, CPU) aren't held indefinitely</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot amber"></div>
+                        <div>Gives user feedback instead of waiting forever</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>How It Works</h3>
+                    <div class="info-row">
+                        <div class="dot"></div>
+                        <div>SDKs let Client set a <strong>per-request timeout</strong> (e.g., 30s)</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot"></div>
+                        <div>If deadline passes with no result → client triggers timeout</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot red"></div>
+                        <div>Client sends a <strong>cancellation notification</strong> to tell server to stop</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot red"></div>
+                        <div>Server <strong>must stop processing</strong> and must <strong>NOT return a result</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 12. Cancellation -->
+        <div class="section" id="s12">
+            <div class="section-header">
+                <span class="section-num red">12</span>
+                <h2>Cancellation</h2>
+            </div>
+            <div class="card">
+                <p style="margin-bottom:12px">When a timeout occurs, the client sends a <code
+                        style="font-family:'DM Mono',monospace;font-size:11.5px">notifications/cancelled</code> message
+                    referencing the original request ID and the reason:</p>
+                <div class="code-block">
+                    <span class="c">// Original request (includes progressToken for tracking)</span><br>
+                    { <span class="k">"id"</span>: <span class="v">"7"</span>, <span class="k">"method"</span>: <span
+                        class="v">"tools/call"</span>,<br>
+                    &nbsp;&nbsp;<span class="k">"params"</span>: { <span class="k">"name"</span>: <span
+                        class="v">"searchCode"</span>, <span class="k">"arguments"</span>: { <span
+                        class="k">"query"</span>: <span class="v">"MCP"</span> },<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                        class="k">"_meta"</span>: { <span class="k">"progressToken"</span>: <span
+                        class="v">"tok-7"</span> } } }<br><br>
+                    <span class="c">// Cancellation notification (fire-and-forget, no id)</span><br>
+                    { <span class="k">"jsonrpc"</span>: <span class="v">"2.0"</span>, <span class="k">"method"</span>:
+                    <span class="v">"notifications/cancelled"</span>,<br>
+                    &nbsp;&nbsp;<span class="k">"params"</span>: { <span class="k">"requestId"</span>: <span
+                        class="v">"7"</span>, <span class="k">"reason"</span>: <span class="v">"Timeout exceeded
+                        (30s)"</span> } }
+                </div>
+            </div>
+        </div>
+
+        <!-- 13. Progress Notification -->
+        <div class="section" id="s13">
+            <div class="section-header">
+                <span class="section-num green">13</span>
+                <h2>Progress Notification</h2>
+            </div>
+            <div class="card" style="margin-bottom:14px">
+                <p><strong>Purpose:</strong> Let the client know a long-running request is still making progress. The
+                    client includes a <code
+                        style="font-family:'DM Mono',monospace;font-size:11.5px">progressToken</code> in the request's
+                    <code style="font-family:'DM Mono',monospace;font-size:11.5px">_meta</code>, and the server sends
+                    <code style="font-family:'DM Mono',monospace;font-size:11.5px">notifications/progress</code> updates
+                    while working.</p>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Request (with progressToken)</h3>
+                    <div class="code-block">
+                        { <span class="k">"id"</span>: <span class="v">7</span>, <span class="k">"method"</span>: <span
+                            class="v">"tools/call"</span>,<br>
+                        &nbsp;&nbsp;<span class="k">"params"</span>: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"name"</span>: <span class="v">"searchCode"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"arguments"</span>: { <span class="k">"query"</span>:
+                        <span class="v">"MCP lifecycle"</span> },<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"_meta"</span>: { <span
+                            class="k">"progressToken"</span>: <span class="v">"tok-7"</span> }<br>
+                        &nbsp;&nbsp;} }
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Server Progress Update</h3>
+                    <div class="code-block">
+                        { <span class="k">"method"</span>: <span class="v">"notifications/progress"</span>,<br>
+                        &nbsp;&nbsp;<span class="k">"params"</span>: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"progressToken"</span>: <span
+                            class="v">"tok-7"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"progress"</span>: <span class="v">60</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"total"</span>: <span class="v">100</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"message"</span>: <span class="v">"Searching 600 of 1000
+                            files"</span><br>
+                        &nbsp;&nbsp;} }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <hr>
+        <div class="section">
+            <div class="section-header">
+                <span class="section-num" style="background:#1e2130">∑</span>
+                <h2>Full Session Flow at a Glance</h2>
+            </div>
+            <div class="card">
+                <div style="font-family:'DM Mono',monospace;font-size:13px;line-height:2.2;color:#4b5563">
+                    <span style="color:#2563eb">CLIENT → SERVER</span>&nbsp;&nbsp;<code
+                        style="background:#eff6ff;color:#2563eb;padding:1px 8px;border-radius:3px">initialize</code>
+                    (version + capabilities + clientInfo)<br>
+                    <span style="color:#059669">SERVER → CLIENT</span>&nbsp;&nbsp;Result (version + server capabilities
+                    + serverInfo)<br>
+                    <span style="color:#2563eb">CLIENT → SERVER</span>&nbsp;&nbsp;<code
+                        style="background:#eff6ff;color:#2563eb;padding:1px 8px;border-radius:3px">notifications/initialized</code>
+                    ← connection established<br>
+                    <span style="color:#2563eb">CLIENT → SERVER</span>&nbsp;&nbsp;<code
+                        style="background:#eff6ff;color:#2563eb;padding:1px 8px;border-radius:3px">tools/list</code>,
+                    <code
+                        style="background:#eff6ff;color:#2563eb;padding:1px 8px;border-radius:3px">prompts/list</code>,
+                    <code
+                        style="background:#eff6ff;color:#2563eb;padding:1px 8px;border-radius:3px">resources/list</code><br>
+                    <span style="color:#059669">SERVER → CLIENT</span>&nbsp;&nbsp;Tool/prompt/resource schemas (or
+                    -32601 if unsupported)<br>
+                    <span style="color:#6b7280">— — — — — OPERATION PHASE — — — — —</span><br>
+                    <span style="color:#2563eb">CLIENT → SERVER</span>&nbsp;&nbsp;<code
+                        style="background:#eff6ff;color:#2563eb;padding:1px 8px;border-radius:3px">tools/call</code>
+                    {name, arguments, _meta.progressToken}<br>
+                    <span style="color:#059669">SERVER → CLIENT</span>&nbsp;&nbsp;<code
+                        style="background:#ecfdf5;color:#059669;padding:1px 8px;border-radius:3px">notifications/progress</code>
+                    (while working)<br>
+                    <span style="color:#059669">SERVER → CLIENT</span>&nbsp;&nbsp;Result or Error response<br>
+                    <span style="color:#6b7280">— — — — — SHUTDOWN — — — — —</span><br>
+                    <span style="color:#dc2626">CLIENT</span>&nbsp;&nbsp;Closes transport (STDIO stream / HTTP
+                    connection)
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="text-align:center;margin-top:32px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">
+            MCP Lifecycle Notes · CampusX MCP Trilogy · 2025
+        </div>
+
+    </div>
+</body>
+
+</html>
