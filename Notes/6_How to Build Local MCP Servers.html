@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build Local MCP Servers — CampusX Notes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;1,400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f7f5f0;
+            --surface: #ffffff;
+            --surface2: #f0ede6;
+            --dark: #1a1714;
+            --accent: #c94f1e;
+            --accent2: #1e6fc9;
+            --accent3: #1ea86e;
+            --muted: #7a7060;
+            --border: #ddd9d0;
+            --code-bg: #1a1714;
+            --code-fg: #e8e4d9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--dark);
+            font-family: 'Space Grotesk', sans-serif;
+            line-height: 1.65;
+            padding: 1.5rem 1rem 4rem;
+        }
+
+        /* HERO */
+        .hero {
+            max-width: 900px;
+            margin: 0 auto 2.5rem;
+            padding: 2.5rem 2rem;
+            background: var(--dark);
+            border-radius: 16px;
+            color: #f7f5f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: "MCP";
+            position: absolute;
+            right: -20px;
+            top: -20px;
+            font-family: 'Playfair Display', serif;
+            font-size: 10rem;
+            color: #ffffff08;
+            pointer-events: none;
+        }
+
+        .hero .tag {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.2rem 0.7rem;
+            border-radius: 4px;
+            margin-bottom: 0.8rem;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero p {
+            color: #a09880;
+            font-size: 0.9rem;
+        }
+
+        /* LAYOUT */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* SECTION CARD */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .card-head {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.9rem 1.4rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+        }
+
+        .card-head .num {
+            background: var(--dark);
+            color: white;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 500;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .card-head .num.orange {
+            background: var(--accent);
+        }
+
+        .card-head .num.blue {
+            background: var(--accent2);
+        }
+
+        .card-head .num.green {
+            background: var(--accent3);
+        }
+
+        .card-head h2 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: var(--dark);
+        }
+
+        .card-body {
+            padding: 1.3rem 1.4rem;
+        }
+
+        /* GRID */
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .grid3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.8rem;
+        }
+
+        @media(max-width:620px) {
+
+            .grid2,
+            .grid3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* MINI CARDS */
+        .mini {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.9rem 1rem;
+            font-size: 0.88rem;
+        }
+
+        .mini h4 {
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.4rem;
+        }
+
+        .mini h4.orange {
+            color: var(--accent);
+        }
+
+        .mini h4.blue {
+            color: var(--accent2);
+        }
+
+        .mini h4.green {
+            color: var(--accent3);
+        }
+
+        .mini p,
+        .mini li {
+            color: var(--muted);
+            line-height: 1.55;
+            font-size: 0.86rem;
+        }
+
+        .mini ul {
+            padding-left: 1.1rem;
+        }
+
+        .mini ul li {
+            margin-bottom: 0.2rem;
+        }
+
+        /* TIMELINE / HISTORY */
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .tl-item {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .tl-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--dark);
+            color: white;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        .tl-dot.orange {
+            background: var(--accent);
+        }
+
+        .tl-dot.blue {
+            background: var(--accent2);
+        }
+
+        .tl-dot.green {
+            background: var(--accent3);
+        }
+
+        .tl-content h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .tl-content p,
+        .tl-content li {
+            font-size: 0.86rem;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .tl-content ul {
+            padding-left: 1.1rem;
+        }
+
+        /* CODE BLOCKS */
+        pre {
+            background: var(--code-bg);
+            color: var(--code-fg);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            margin-top: 0.8rem;
+        }
+
+        .kw {
+            color: #7b9ef5;
+        }
+
+        .fn {
+            color: #79d4a8;
+        }
+
+        .str {
+            color: #f5c26b;
+        }
+
+        .cm {
+            color: #5a5040;
+            font-style: italic;
+        }
+
+        .dec {
+            color: #e87b5a;
+        }
+
+        .tp {
+            color: #c5a5f5;
+        }
+
+        /* STEP LIST */
+        .steps {
+            list-style: none;
+            counter-reset: step;
+        }
+
+        .steps li {
+            counter-increment: step;
+            display: flex;
+            gap: 0.7rem;
+            align-items: flex-start;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.88rem;
+        }
+
+        .steps li:last-child {
+            border-bottom: none;
+        }
+
+        .steps li::before {
+            content: counter(step);
+            background: var(--dark);
+            color: white;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            min-width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        .steps li code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8em;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            padding: 0.1rem 0.35rem;
+            border-radius: 3px;
+            color: var(--accent);
+        }
+
+        .steps li span {
+            color: var(--muted);
+        }
+
+        /* INLINE CODE */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82em;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            padding: 0.1rem 0.35rem;
+            border-radius: 3px;
+            color: var(--accent2);
+        }
+
+        /* TABLE */
+        .tbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.86rem;
+            margin-top: 0.5rem;
+        }
+
+        .tbl th {
+            background: var(--dark);
+            color: white;
+            padding: 0.5rem 0.8rem;
+            text-align: left;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tbl td {
+            padding: 0.5rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--muted);
+            vertical-align: top;
+        }
+
+        .tbl tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tbl td:first-child {
+            color: var(--dark);
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8em;
+        }
+
+        /* BADGE ROW */
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.7rem;
+        }
+
+        .badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 99px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--muted);
+        }
+
+        .badge.orange {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: #fff3ef;
+        }
+
+        .badge.blue {
+            border-color: var(--accent2);
+            color: var(--accent2);
+            background: #eff4ff;
+        }
+
+        .badge.green {
+            border-color: var(--accent3);
+            color: var(--accent3);
+            background: #efffF7;
+        }
+
+        /* DEMO BOX */
+        .demo-box {
+            background: #0f1117;
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.7;
+            color: #c5c0b0;
+            margin-top: 0.5rem;
+        }
+
+        .demo-box .user {
+            color: #7b9ef5;
+        }
+
+        .demo-box .ai {
+            color: #79d4a8;
+        }
+
+        .demo-box .tool {
+            color: #e87b5a;
+            font-style: italic;
+        }
+
+        /* DIVIDER */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin: 0.8rem 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* COMPARISON */
+        .vs-row {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 0.5rem;
+            align-items: center;
+            font-size: 0.86rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .vs-row:last-child {
+            border-bottom: none;
+        }
+
+        .vs-row .vs {
+            color: var(--muted);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .vs-row .left {
+            color: var(--accent2);
+        }
+
+        .vs-row .right {
+            color: var(--accent3);
+        }
+
+        footer {
+            text-align: center;
+            color: var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            margin-top: 2.5rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="hero">
+        <div class="tag">CampusX · MCP Trilogy</div>
+        <h1>How to Build Local<br>MCP Servers</h1>
+        <p>Complete notes · 1:12:10 · All 3 sets combined · Fri 26 – Sat 27 Sep 2025</p>
+    </div>
+
+    <div class="container">
+
+        <!-- 1. RECAP & ROADMAP -->
+        <div class="card">
+            <div class="card-head"><span class="num orange">01</span>
+                <h2>Series Recap & Today's Goals</h2>
+            </div>
+            <div class="card-body">
+                <div class="grid2">
+                    <div>
+                        <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.8rem">MCP Trilogy so far:</p>
+                        <div class="tbl-wrap">
+                            <table class="tbl">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Episode</th>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Trailer → Newsletter (MCP)</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Why → Why MCP?</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>What → MCP Architecture</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>What → MCP Lifecycle</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>How → Ready-made (Claude Desktop) ✓</td>
+                                </tr>
+                                <tr>
+                                    <td>6</td>
+                                    <td><strong>How → Build Local Servers ← Today</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="mini">
+                        <h4 class="orange">Plan of Action (Today)</h4>
+                        <ul>
+                            <li><strong>Part 1:</strong> Demo server — install, run, connect to Claude</li>
+                            <li><strong>Part 2:</strong> Build Expense Tracker (incremental) → local server</li>
+                            <li><strong>Part 3:</strong> Improve → add date filtering, categories, resources</li>
+                            <li><strong>Part 4:</strong> FastMCP × FastAPI integration demo</li>
+                        </ul>
+                        <div class="badges" style="margin-top:0.7rem">
+                            <span class="badge orange">FastMCP 2.x</span>
+                            <span class="badge blue">SQLite</span>
+                            <span class="badge green">MCP Inspector</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. FASTMCP vs MCP SDK HISTORY -->
+        <div class="card">
+            <div class="card-head"><span class="num blue">02</span>
+                <h2>FastMCP vs MCP SDK — History</h2>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="tl-item">
+                        <div class="tl-dot orange">1</div>
+                        <div class="tl-content">
+                            <h4>Birth of MCP (2023–2024)</h4>
+                            <ul>
+                                <li>Anthropic introduces MCP — structured communication between LLMs & external
+                                    tools/data</li>
+                                <li>Official Python SDK (<code>mcp</code>) released with: <code>mcp.server</code> ·
+                                    <code>mcp.client</code> · <code>mcp.cli</code></li>
+                                <li>Install: <code>pip install mcp[cli]</code> — becomes the reference implementation
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-dot blue">2</div>
+                        <div class="tl-content">
+                            <h4>Developer Friction & FastMCP 1.x (2024)</h4>
+                            <ul>
+                                <li><strong>Problem:</strong> Raw SDK = verbose & boilerplate heavy — manual
+                                    <code>list_tools</code>, <code>call_tool</code>, explicit schemas</li>
+                                <li><strong>Solution:</strong> FastMCP helper inside SDK
+                                    (<code>mcp.server.fastmcp</code>) — decorator-driven, type-hint aware</li>
+                                <li>FastMCP ≈ FastAPI for MCP, MCP SDK ≈ WSGI/Flask for Python web</li>
+                                <li>Popular for <strong>teaching & prototyping</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-dot green">3</div>
+                        <div class="tl-content">
+                            <h4>FastMCP Breaks Out (2025) — v2.x</h4>
+                            <ul>
+                                <li>FastMCP adoption grows rapidly; SDK maintainers split: SDK stays minimal &
+                                    spec-focused</li>
+                                <li>FastMCP 2.x released as <strong>standalone package</strong> — install:
+                                    <code>pip install fastmcp</code></li>
+                                <li>Standalone, community-driven, fast-evolving; highly compatible with 1.x but may
+                                    diverge</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-dot" style="background:#888">4</div>
+                        <div class="tl-content">
+                            <h4>Where Things Stand (Late 2025)</h4>
+                            <div class="grid2" style="margin-top:0.4rem">
+                                <div class="mini">
+                                    <h4 class="blue">MCP SDK (<code>mcp</code>)</h4>
+                                    <ul>
+                                        <li>Official, spec-compliant, stable</li>
+                                        <li>Install: <code>pip install mcp[cli]</code></li>
+                                    </ul>
+                                </div>
+                                <div class="mini">
+                                    <h4 class="green">FastMCP 2.x (<code>fastmcp</code>)</h4>
+                                    <ul>
+                                        <li>Standalone, community-driven</li>
+                                        <li>Ideal for students, educators, rapid prototypes</li>
+                                        <li>Not official, but more ergonomic</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. BASIC SETUP -->
+        <div class="card">
+            <div class="card-head"><span class="num orange">03</span>
+                <h2>Basic Setup — Demo Server</h2>
+            </div>
+            <div class="card-body">
+                <div class="grid2">
+                    <div>
+                        <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.8rem">Setup steps:</p>
+                        <ol class="steps">
+                            <li><span>Install <code>uv</code></span></li>
+                            <li><span>Create project folder: <code>fastmcp-demo-server</code></span></li>
+                            <li><span>Open folder in VS Code, open terminal</span></li>
+                            <li><code>uv init .</code></li>
+                            <li><code>uv add fastmcp</code></li>
+                            <li><code>fastmcp version</code> <span>— verify install</span></li>
+                            <li><span>Create <code>main.py</code> with tools</span></li>
+                            <li><code>uv run fastmcp dev main.py</code> <span>→ MCP Inspector</span></li>
+                            <li><code>uv run fastmcp run main.py</code> <span>→ production run</span></li>
+                            <li><code>uv run fastmcp install claude-desktop main.py</code> <span>→ adds to Claude
+                                    Desktop</span></li>
+                        </ol>
+                    </div>
+                    <div>
+                        <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.5rem">Demo server code
+                            (<code>main.py</code>):</p>
+                        <pre>
+<span class="kw">import</span> random
+<span class="kw">from</span> fastmcp <span class="kw">import</span> <span class="tp">FastMCP</span>
+
+mcp = <span class="fn">FastMCP</span>(<span class="str">"Demo Server"</span>)
+
+<span class="dec">@mcp.tool</span>
+<span class="kw">def</span> <span class="fn">roll_dice</span>(n_dice: <span class="tp">int</span> = 1) -> <span class="tp">list[int]</span>:
+    <span class="str">"""Roll n_dice 6-sided dice."""</span>
+    <span class="kw">return</span> [random.randint(1, 6)
+            <span class="kw">for</span> _ <span class="kw">in</span> range(n_dice)]
+
+<span class="dec">@mcp.tool</span>
+<span class="kw">def</span> <span class="fn">add_numbers</span>(a: <span class="tp">float</span>, b: <span class="tp">float</span>) -> <span class="tp">float</span>:
+    <span class="str">"""Add two numbers together."""</span>
+    <span class="kw">return</span> a + b
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    mcp.<span class="fn">run</span>()
+</pre>
+                    </div>
+                </div>
+                <div class="divider">MCP Inspector</div>
+                <div class="mini">
+                    <h4 class="blue">MCP Inspector v0.16.8</h4>
+                    <p>Run <code>uv run fastmcp dev main.py</code> → opens at <code>localhost:6277</code> with session
+                        token. Browser UI at <code>localhost:6274/?MCP_PROXY_AUTH_TOKEN=...</code>. Test tools
+                        interactively — list tools, run <code>add_numbers(a=5, b=6)</code>, see raw JSON
+                        request/response.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. AUTO CONFIG -->
+        <div class="card">
+            <div class="card-head"><span class="num green">04</span>
+                <h2>Claude Desktop Config — Auto Generated</h2>
+            </div>
+            <div class="card-body">
+                <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.8rem">Running
+                    <code>uv run fastmcp install claude-desktop main.py</code> auto-writes to
+                    <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>:</p>
+                <pre>
+{
+  <span class="kw">"mcpServers"</span>: {
+    <span class="str">"Demo Server"</span>: {
+      <span class="kw">"command"</span>: <span class="str">"/Library/.../uv"</span>,
+      <span class="kw">"args"</span>: [
+        <span class="str">"run"</span>, <span class="str">"--with"</span>, <span class="str">"fastmcp"</span>,
+        <span class="str">"fastmcp"</span>, <span class="str">"run"</span>,
+        <span class="str">"/Users/nitish/Desktop/.../main.py"</span>
+      ]
+    }
+  }
+}
+</pre>
+                <div class="badges">
+                    <span class="badge green">Successfully installed 'Demo Server' in Claude Desktop</span>
+                    <span class="badge">restart Claude after config change</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. EXPENSE TRACKER -->
+        <div class="card">
+            <div class="card-head"><span class="num orange">05</span>
+                <h2>Expense Tracker MCP Server — Design</h2>
+            </div>
+            <div class="card-body">
+                <div class="grid2">
+                    <div class="mini">
+                        <h4 class="orange">6 Tools</h4>
+                        <ul>
+                            <li>1. <code>add_expense</code></li>
+                            <li>2. <code>list_expenses</code></li>
+                            <li>3. <code>summarize</code></li>
+                            <li>4. <code>edit_expense</code></li>
+                            <li>5. <code>delete_expense</code></li>
+                            <li>6. <code>credit</code> (future)</li>
+                        </ul>
+                    </div>
+                    <div class="mini">
+                        <h4 class="blue">SQLite Database</h4>
+                        <p>File: <code>expenses.db</code> in project folder</p>
+                        <p style="margin-top:0.4rem">Schema — <code>expenses</code> table:</p>
+                        <ul style="margin-top:0.3rem">
+                            <li><code>id</code> INTEGER PRIMARY KEY AUTOINCREMENT</li>
+                            <li><code>date</code> TEXT NOT NULL</li>
+                            <li><code>amount</code> REAL NOT NULL</li>
+                            <li><code>category</code> TEXT NOT NULL</li>
+                            <li><code>subcategory</code> TEXT DEFAULT ''</li>
+                            <li><code>note</code> TEXT DEFAULT ''</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. FULL SERVER CODE -->
+        <div class="card">
+            <div class="card-head"><span class="num blue">06</span>
+                <h2>Expense Tracker — Full Server Code</h2>
+            </div>
+            <div class="card-body">
+                <pre>
+<span class="kw">from</span> fastmcp <span class="kw">import</span> <span class="tp">FastMCP</span>
+<span class="kw">import</span> os, sqlite3
+
+DB_PATH = os.path.join(os.path.dirname(__file__), <span class="str">"expenses.db"</span>)
+mcp = <span class="fn">FastMCP</span>(<span class="str">"ExpenseTracker"</span>)
+
+<span class="cm"># ─── DB INIT ────────────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">init_db</span>():
+    <span class="kw">with</span> sqlite3.connect(DB_PATH) <span class="kw">as</span> c:
+        c.execute(<span class="str">"""
+            CREATE TABLE IF NOT EXISTS expenses(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT NOT NULL,
+                amount REAL NOT NULL,
+                category TEXT NOT NULL,
+                subcategory TEXT DEFAULT '',
+                note TEXT DEFAULT ''
+            )"""</span>)
+init_db()
+
+<span class="cm"># ─── TOOL 1: Add Expense ────────────────────────────</span>
+<span class="dec">@mcp.tool()</span>
+<span class="kw">def</span> <span class="fn">add_expense</span>(date, amount, category,
+                  subcategory=<span class="str">""</span>, note=<span class="str">""</span>):
+    <span class="kw">with</span> sqlite3.connect(DB_PATH) <span class="kw">as</span> c:
+        cur = c.execute(
+            <span class="str">"INSERT INTO expenses(date,amount,category,subcategory,note) VALUES (?,?,?,?,?)"</span>,
+            (date, amount, category, subcategory, note))
+    <span class="kw">return</span> {<span class="str">"status"</span>: <span class="str">"ok"</span>, <span class="str">"id"</span>: cur.lastrowid}
+
+<span class="cm"># ─── TOOL 2: List Expenses (with date range) ────────</span>
+<span class="dec">@mcp.tool()</span>
+<span class="kw">def</span> <span class="fn">list_expenses</span>(start_date, end_date):
+    <span class="str">'''List expense entries within an inclusive date range.'''</span>
+    <span class="kw">with</span> sqlite3.connect(DB_PATH) <span class="kw">as</span> c:
+        cur = c.execute(<span class="str">"""
+            SELECT id, date, amount, category, subcategory, note
+            FROM expenses
+            WHERE date BETWEEN ? AND ?
+            ORDER BY id ASC"""</span>, (start_date, end_date))
+        cols = [d[0] <span class="kw">for</span> d <span class="kw">in</span> cur.description]
+        <span class="kw">return</span> [dict(zip(cols, r)) <span class="kw">for</span> r <span class="kw">in</span> cur.fetchall()]
+
+<span class="cm"># ─── TOOL 3: Summarize (by category, optional filter) </span>
+<span class="dec">@mcp.tool()</span>
+<span class="kw">def</span> <span class="fn">summarize</span>(start_date, end_date, category=<span class="tp">None</span>):
+    <span class="str">'''Summarize expenses by category within date range.'''</span>
+    <span class="kw">with</span> sqlite3.connect(DB_PATH) <span class="kw">as</span> c:
+        query = <span class="str">"""SELECT category, SUM(amount) AS total_amount
+                   FROM expenses WHERE date BETWEEN ? AND ?"""</span>
+        params = [start_date, end_date]
+        <span class="kw">if</span> category:
+            query += <span class="str">" AND category = ?"</span>
+            params.append(category)
+        query += <span class="str">" GROUP BY category ORDER BY category ASC"</span>
+        cur = c.execute(query, params)
+        cols = [d[0] <span class="kw">for</span> d <span class="kw">in</span> cur.description]
+        <span class="kw">return</span> [dict(zip(cols, r)) <span class="kw">for</span> r <span class="kw">in</span> cur.fetchall()]
+
+<span class="cm"># ─── RESOURCE: Categories JSON ───────────────────────</span>
+CATEGORIES_PATH = os.path.join(os.path.dirname(__file__), <span class="str">"categories.json"</span>)
+
+<span class="dec">@mcp.resource(<span class="str">"expense://categories"</span>, mime_type=<span class="str">"application/json"</span>)</span>
+<span class="kw">def</span> <span class="fn">categories</span>():
+    <span class="cm"># Read fresh each time so you can edit without restarting</span>
+    <span class="kw">with</span> open(CATEGORIES_PATH, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        <span class="kw">return</span> f.read()
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    mcp.<span class="fn">run</span>()
+</pre>
+            </div>
+        </div>
+
+        <!-- 7. LIVE DEMO -->
+        <div class="card">
+            <div class="card-head"><span class="num green">07</span>
+                <h2>Live Demo in Claude Desktop</h2>
+            </div>
+            <div class="card-body">
+                <div class="demo-box">
+                    <div class="user">User: add an expense - cab ride to delhi last sunday fare was 600 Rs</div>
+                    <div class="tool">→ [Tool: add_expense] date: 2025-09-21, amount: 600, category: Transportation
+                    </div>
+                    <div class="ai">Claude: Added ₹600 cab ride to Delhi (Sep 21). Saved as ID #1.</div>
+                    <br>
+                    <div class="user">User: add expense - groceries yesterday for Rs 500</div>
+                    <div class="tool">→ [Tool: add_expense] date: 2025-09-26, amount: 500, category: Groceries</div>
+                    <div class="ai">Claude: Added ₹500 groceries (Sep 26). Saved as ID #2.</div>
+                    <br>
+                    <div class="user">User: show me all the expenses from sept first week</div>
+                    <div class="tool">→ [Tool: list_expenses] start: 2025-09-01, end: 2025-09-07</div>
+                    <div class="ai">Claude: Sep 1 ₹1200 Food (Dining Out) · Sep 3 ₹2500 Utilities · Sep 7 ₹800
+                        Entertainment</div>
+                    <br>
+                    <div class="user">User: list my expenses from the last week in tabular manner</div>
+                    <div class="tool">→ [Tool: list_expenses] start: 2025-09-21, end: 2025-09-27</div>
+                    <div class="ai">Claude: Returns markdown table with all entries</div>
+                    <br>
+                    <div class="user">User: add new expense - udemy course purchase on last friday Rs 799</div>
+                    <div class="tool">→ [Tool: add_expense] date: 2025-09-20, category: Education, amount: 799</div>
+                    <div class="ai">Claude: Added ₹799 Udemy course (Sep 20). ID #13.</div>
+                    <br>
+                    <div class="user">User: add transaction - cab ride to airport last wednesday Rs 700, fetch category
+                        from the pasted text</div>
+                    <div class="tool">→ [Resource: expense://categories] → [Tool: add_expense] category: transport,
+                        subcategory: cab_ride_hailing</div>
+                    <div class="ai">Claude: Used categories.json to auto-assign correct category + subcategory.</div>
+                </div>
+                <div class="mini" style="margin-top:0.8rem">
+                    <h4>Permission Prompt</h4>
+                    <p>Claude shows tool call details + 3 options: <strong>Deny</strong> (Esc) · <strong>Always
+                            allow</strong> · <strong>Allow once</strong>. Note: "Claude cannot guarantee the security or
+                        privacy practices of third-party integrations."</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. FASTMCP x FASTAPI -->
+        <div class="card">
+            <div class="card-head"><span class="num orange">08</span>
+                <h2>FastMCP × FastAPI Integration</h2>
+            </div>
+            <div class="card-body">
+                <div class="grid2" style="margin-bottom:1rem">
+                    <div class="mini">
+                        <h4 class="orange">Design Philosophy</h4>
+                        <p>FastMCP is to MCP as FastAPI is to WSGI. They share the same decorator-driven,
+                            type-hint-aware design. A FastAPI app can be wrapped as an MCP server in just a few lines.
+                        </p>
+                    </div>
+                    <div class="mini">
+                        <h4 class="blue">Real-world Scenario</h4>
+                        <p>Companies already have products (website + FastAPI backend). MCP connects those APIs to
+                            Claude Desktop / ChatGPT clients — without rewriting anything.</p>
+                    </div>
+                </div>
+                <div class="divider">server.py — Convert FastAPI → MCP (13 lines)</div>
+                <pre>
+<span class="cm"># server.py — mcp_server.py</span>
+<span class="kw">from</span> fastmcp <span class="kw">import</span> <span class="tp">FastMCP</span>
+<span class="kw">from</span> main <span class="kw">import</span> app  <span class="cm"># Import your FastAPI app</span>
+
+<span class="cm"># Convert FastAPI app to MCP server — one line!</span>
+mcp = <span class="tp">FastMCP</span>.<span class="fn">from_fastapi</span>(
+    app=app,
+    name=<span class="str">"Expense Tracker server"</span>,
+)
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    mcp.<span class="fn">run</span>()
+</pre>
+                <p style="font-size:0.86rem;color:var(--muted);margin-top:0.8rem">Run dev inspector:
+                    <code>uv run fastmcp dev server.py</code></p>
+
+                <div class="divider">FastAPI Swagger UI — Expense Tracker API</div>
+                <table class="tbl">
+                    <tr>
+                        <th>Method</th>
+                        <th>Path</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>POST</td>
+                        <td>/expenses</td>
+                        <td>Add Expense</td>
+                    </tr>
+                    <tr>
+                        <td>GET</td>
+                        <td>/expenses</td>
+                        <td>List Expenses</td>
+                    </tr>
+                    <tr>
+                        <td>GET</td>
+                        <td>/expenses/summary</td>
+                        <td>Summarize</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- 9. QUICK REFERENCE -->
+        <div class="card">
+            <div class="card-head"><span class="num green">09</span>
+                <h2>Quick Reference — Commands & Concepts</h2>
+            </div>
+            <div class="card-body">
+                <div class="grid2">
+                    <div>
+                        <table class="tbl">
+                            <tr>
+                                <th>Command</th>
+                                <th>Action</th>
+                            </tr>
+                            <tr>
+                                <td>uv init .</td>
+                                <td>Init uv project</td>
+                            </tr>
+                            <tr>
+                                <td>uv add fastmcp</td>
+                                <td>Add FastMCP dep</td>
+                            </tr>
+                            <tr>
+                                <td>fastmcp version</td>
+                                <td>Check version</td>
+                            </tr>
+                            <tr>
+                                <td>uv run fastmcp dev main.py</td>
+                                <td>Dev mode + Inspector</td>
+                            </tr>
+                            <tr>
+                                <td>uv run fastmcp run main.py</td>
+                                <td>Production run</td>
+                            </tr>
+                            <tr>
+                                <td>uv run fastmcp install claude-desktop main.py</td>
+                                <td>Register in Claude Desktop</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div>
+                        <table class="tbl">
+                            <tr>
+                                <th>Decorator</th>
+                                <th>Use</th>
+                            </tr>
+                            <tr>
+                                <td>@mcp.tool()</td>
+                                <td>Expose function as MCP tool</td>
+                            </tr>
+                            <tr>
+                                <td>@mcp.resource("uri")</td>
+                                <td>Expose data as MCP resource</td>
+                            </tr>
+                            <tr>
+                                <td>@mcp.prompt()</td>
+                                <td>Expose prompt template</td>
+                            </tr>
+                        </table>
+                        <div class="mini" style="margin-top:0.8rem">
+                            <h4 class="blue">Key Points</h4>
+                            <ul>
+                                <li>Docstrings become tool descriptions for Claude</li>
+                                <li>Type hints auto-generate JSON schema</li>
+                                <li>Resources read fresh on each call</li>
+                                <li>Config: <code>~/Library/Application Support/Claude/</code></li>
+                                <li>MCP Inspector at <code>localhost:6274</code></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>Notes from: How to Build Local MCP Servers | MCP Trilogy | CampusX · 1:12:10</p>
+        <p style="margin-top:0.3rem">Recorded: Fri 26 – Sat 27 Sep 2025 · All 41 screenshots combined</p>
+    </footer>
+
+</body>
+
+</html>
