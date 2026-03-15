@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP × Claude Desktop — Study Notes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f0e17;
+            --surface: #1a1827;
+            --surface2: #221f35;
+            --accent: #ff6b35;
+            --accent2: #7b61ff;
+            --accent3: #00d4aa;
+            --text: #fffffe;
+            --muted: #a7a3c2;
+            --border: #2e2b45;
+            --tag-bg: #2a2640;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Lora', serif;
+            line-height: 1.7;
+            padding: 2rem 1rem 4rem;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 3.5rem 1rem 2.5rem;
+            background: radial-gradient(ellipse 80% 60% at 50% 0%, #2a1f5e55, transparent);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .hero::before {
+            content: "MCP";
+            position: absolute;
+            font-family: 'Syne', sans-serif;
+            font-size: 11rem;
+            font-weight: 800;
+            color: #ffffff06;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            letter-spacing: -0.05em;
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.8rem, 5vw, 3.2rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            position: relative;
+        }
+
+        .hero h1 span {
+            color: var(--accent);
+        }
+
+        .hero p {
+            color: var(--muted);
+            margin-top: 0.6rem;
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.8rem 2rem;
+            transition: border-color 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 14px 14px 0 0;
+        }
+
+        .card.orange::after {
+            background: var(--accent);
+        }
+
+        .card.purple::after {
+            background: var(--accent2);
+        }
+
+        .card.teal::after {
+            background: var(--accent3);
+        }
+
+        .card.mixed::after {
+            background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+        }
+
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .card-title .icon {
+            font-size: 1.2rem;
+        }
+
+        .card-title.orange {
+            color: var(--accent);
+        }
+
+        .card-title.purple {
+            color: var(--accent2);
+        }
+
+        .card-title.teal {
+            color: var(--accent3);
+        }
+
+        /* Strategy grid */
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 620px) {
+            .strategy-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .strat-item {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.88rem;
+        }
+
+        .strat-item .label {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .strat-item .box {
+            display: inline-block;
+            padding: 0.2rem 0.8rem;
+            border-radius: 5px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.8rem;
+            margin: 0.15rem;
+        }
+
+        .green-box {
+            background: #1a3a2a;
+            color: #6ee7a8;
+            border: 1px solid #2a5a3a;
+        }
+
+        .yellow-box {
+            background: #332e10;
+            color: #f5d76e;
+            border: 1px solid #554a18;
+        }
+
+        .arrow {
+            color: var(--muted);
+            font-size: 1.1rem;
+            margin: 0.4rem 0;
+            display: block;
+        }
+
+        /* Two-col list */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 560px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .list-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--muted);
+            padding: 0.3rem 0;
+        }
+
+        .list-item .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent2);
+            margin-top: 0.55rem;
+            flex-shrink: 0;
+        }
+
+        .list-item strong {
+            color: var(--text);
+        }
+
+        /* Connector explanation */
+        .def-block {
+            background: var(--surface2);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+            padding: 0.9rem 1.2rem;
+            font-size: 0.92rem;
+            color: var(--muted);
+            margin-bottom: 0.8rem;
+        }
+
+        .def-block strong {
+            color: var(--text);
+        }
+
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+        }
+
+        .badge {
+            background: var(--tag-bg);
+            border: 1px solid var(--border);
+            border-radius: 99px;
+            padding: 0.2rem 0.75rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent3);
+        }
+
+        /* Why not connectors */
+        .reason-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 560px) {
+            .reason-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .reason-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            font-size: 0.88rem;
+        }
+
+        .reason-card h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .reason-card p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* Config JSON block */
+        pre {
+            background: #0a0914;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.2rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.78rem;
+            overflow-x: auto;
+            line-height: 1.7;
+            color: #c5c0e0;
+            margin-top: 0.8rem;
+        }
+
+        .kw {
+            color: #7b61ff;
+        }
+
+        .str {
+            color: #6ee7a8;
+        }
+
+        .cm {
+            color: #554f70;
+            font-style: italic;
+        }
+
+        /* Demo cards row */
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .demo-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            font-size: 0.87rem;
+        }
+
+        .demo-card .dtitle {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent3);
+        }
+
+        .demo-card p {
+            color: var(--muted);
+            font-size: 0.84rem;
+        }
+
+        /* Aggregator table */
+        .agg-list {
+            margin-top: 0.5rem;
+        }
+
+        .agg-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.88rem;
+        }
+
+        .agg-item:last-child {
+            border-bottom: none;
+        }
+
+        .agg-name {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent2);
+            flex-shrink: 0;
+            min-width: 200px;
+        }
+
+        .agg-desc {
+            color: var(--muted);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            color: var(--border);
+            font-family: 'DM Mono', monospace;
+            font-size: 0.75rem;
+            margin-top: 3rem;
+        }
+
+        .section-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0.5rem 0 1.2rem;
+            color: var(--muted);
+            font-size: 0.75rem;
+            font-family: 'DM Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="hero">
+        <h1>Model Context Protocol<br><span>× Claude Desktop</span></h1>
+        <p>Comprehensive study notes — How to connect MCP Servers</p>
+    </div>
+
+    <div class="container">
+
+        <!-- 1. Strategy -->
+        <div class="card orange">
+            <div class="card-title orange"><span class="icon">🗺</span> Strategy — Three Approaches</div>
+            <div class="strategy-grid">
+                <div class="strat-item">
+                    <div class="label">Option 1</div>
+                    <span class="box green-box">Claude Desktop</span>
+                    <span class="arrow">→</span>
+                    <span class="box yellow-box">Google Drive</span>
+                    <p style="color:var(--muted);font-size:0.78rem;margin-top:0.5rem">Ready-made client + existing
+                        server</p>
+                </div>
+                <div class="strat-item">
+                    <div class="label">Option 2</div>
+                    <span class="box green-box">Claude Desktop</span>
+                    <span class="arrow">→</span>
+                    <span class="box yellow-box">Your MCP Server</span>
+                    <p style="color:var(--muted);font-size:0.78rem;margin-top:0.5rem">Ready-made client + custom server
+                    </p>
+                </div>
+                <div class="strat-item">
+                    <div class="label">Option 3</div>
+                    <span class="box green-box">Your Client</span>
+                    <span class="arrow">→</span>
+                    <span class="box yellow-box">Your MCP Server</span>
+                    <p style="color:var(--muted);font-size:0.78rem;margin-top:0.5rem">Full custom stack</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Plan of Action -->
+        <div class="card purple">
+            <div class="card-title purple"><span class="icon">📋</span> Plan of Action</div>
+            <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem">Claude Desktop connects to two types of
+                servers:</p>
+            <div class="two-col">
+                <div>
+                    <div class="list-item">
+                        <div class="dot"></div><strong>Local Servers</strong>
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--muted)"></div>Filesystem (read/write local files)
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--muted)"></div>Notion workspace
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--muted)"></div>manim-server (animations)
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--muted)"></div>Custom servers via config
+                    </div>
+                </div>
+                <div>
+                    <div class="list-item">
+                        <div class="dot"></div><strong>Remote Servers</strong>
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--muted)"></div>Google Drive
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--muted)"></div>X / Twitter
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--muted)"></div>HubSpot, Linear, Notion
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--muted)"></div>Any OAuth-based service
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Type of Connections -->
+        <div class="card teal">
+            <div class="card-title teal"><span class="icon">🔌</span> Type of Connections</div>
+            <div class="two-col" style="gap:1rem">
+                <div class="def-block">
+                    <strong>Config File</strong><br>
+                    Manually edit <code
+                        style="font-family:'DM Mono';font-size:0.82em;color:var(--accent3)">claude_desktop_config.json</code>.
+                    Add server definitions with command, args, and env variables. Best for custom or third-party
+                    servers.
+                </div>
+                <div class="def-block" style="border-color:var(--accent2)">
+                    <strong>Connectors</strong><br>
+                    Built-in UI in Claude Desktop. Click to add, OAuth login handled automatically. Best for supported
+                    apps — no JSON editing required.
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. What are Connectors -->
+        <div class="card orange">
+            <div class="card-title orange"><span class="icon">🔗</span> What Are Connectors?</div>
+            <div class="def-block">
+                A <strong>Connector</strong> is a built-in feature that links Claude to MCP servers
+                <strong>automatically</strong>, without manual setup or configuration.
+            </div>
+            <div class="list-item">
+                <div class="dot"></div>Designed for <strong>non-technical users</strong> who want Claude to talk to
+                their apps
+            </div>
+            <div class="list-item">
+                <div class="dot"></div>No running servers, no editing JSON, no transport config
+            </div>
+            <div class="list-item">
+                <div class="dot"></div>Handles <strong>OAuth authentication</strong> (Google, GitHub, etc.)
+                automatically
+            </div>
+            <div class="list-item">
+                <div class="dot"></div>Think of it as the <strong>"App Store" for MCP servers</strong> — click-based,
+                pre-curated
+            </div>
+            <div class="badge-row">
+                <span class="badge">easy</span><span class="badge">safe</span><span class="badge">consistent</span><span
+                    class="badge">OAuth</span><span class="badge">no-config</span>
+            </div>
+        </div>
+
+        <!-- 5. Why not always Connectors -->
+        <div class="card purple">
+            <div class="card-title purple"><span class="icon">⚠️</span> Why Not Use Connectors Always?</div>
+            <div class="reason-grid">
+                <div class="reason-card">
+                    <h4>Curated & Managed</h4>
+                    <p>Connectors are officially <strong>built, hosted, and maintained by Anthropic</strong>. They have
+                        OAuth, security, rate-limits, and stability — but Anthropic can't review every possible server.
+                        Doesn't scale.</p>
+                </div>
+                <div class="reason-card">
+                    <h4>MCP is an Open Standard</h4>
+                    <p>MCP is designed so <strong>anyone</strong> can write a server. Forcing everything through
+                        Connectors would <strong>close the ecosystem</strong> and make you dependent on Anthropic to
+                        approve/publish servers.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Desktop Extensions (Connectors UI) -->
+        <div class="card teal">
+            <div class="card-title teal"><span class="icon">🖥</span> Connectors UI — Desktop Extensions</div>
+            <p style="color:var(--muted);font-size:0.88rem;margin-bottom:0.8rem">Found in Claude Desktop → Connectors →
+                <strong>Desktop Extensions</strong> tab:</p>
+            <div class="two-col">
+                <div class="list-item">
+                    <div class="dot"></div><strong>Filesystem</strong> — read/write local files
+                </div>
+                <div class="list-item">
+                    <div class="dot"></div><strong>Control Chrome</strong> — browser automation
+                </div>
+                <div class="list-item">
+                    <div class="dot"></div><strong>Read/Send iMessages</strong>
+                </div>
+                <div class="list-item">
+                    <div class="dot"></div><strong>Read/Write Apple Notes</strong>
+                </div>
+                <div class="list-item">
+                    <div class="dot"></div><strong>Windows-MCP</strong> — Windows OS interaction
+                </div>
+                <div class="list-item">
+                    <div class="dot"></div><strong>Control your Mac</strong> — AppleScript tasks
+                </div>
+                <div class="list-item">
+                    <div class="dot"></div><strong>PDF Filler, Figma Dev Mode</strong>
+                </div>
+                <div class="list-item">
+                    <div class="dot"></div><strong>Spotify, ClickUp, Airtable</strong>
+                </div>
+                <div class="list-item">
+                    <div class="dot"></div><strong>Context7</strong> — code docs for any prompt
+                </div>
+                <div class="list-item">
+                    <div class="dot"></div><strong>Kapture Browser Automation</strong>
+                </div>
+            </div>
+            <p style="color:var(--muted);font-size:0.88rem;margin-top:0.8rem;margin-bottom:0.5rem">And on the
+                <strong>Web</strong> tab:</p>
+            <div class="two-col">
+                <div class="list-item">
+                    <div class="dot" style="background:var(--accent)"></div>Google Drive, Gmail, Google Calendar
+                </div>
+                <div class="list-item">
+                    <div class="dot" style="background:var(--accent)"></div>HubSpot, Intercom, Jotform
+                </div>
+                <div class="list-item">
+                    <div class="dot" style="background:var(--accent)"></div>Notion, Linear, monday.com
+                </div>
+                <div class="list-item">
+                    <div class="dot" style="background:var(--accent)"></div>Netlify, Hugging Face, Indeed
+                </div>
+                <div class="list-item">
+                    <div class="dot" style="background:var(--accent)"></div>Morningstar, Plaid, PayPal
+                </div>
+                <div class="list-item">
+                    <div class="dot" style="background:var(--accent)"></div>Jam (screen recording), Postman
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Demo Highlights -->
+        <div class="card mixed">
+            <div class="card-title" style="color:var(--text)"><span class="icon">🎬</span> Demo Highlights</div>
+            <div class="demo-grid">
+                <div class="demo-card">
+                    <div class="dtitle">manim-server</div>
+                    <p>Local connector for creating math animations. Prompt Claude to generate a linear algebra matrix
+                        transformation animation — Claude calls the MCP tool automatically.</p>
+                </div>
+                <div class="demo-card">
+                    <div class="dtitle">Google Drive</div>
+                    <p>Web connector. Click <em>Connect</em>, sign in via OAuth, and Drive search is instantly available
+                        in the tools menu. Prompt: <em>"From Drive"</em> context suggestion appears.</p>
+                </div>
+                <div class="demo-card">
+                    <div class="dtitle">Twitter MCP</div>
+                    <p>Via config file using <code
+                            style="font-size:0.78em;color:var(--accent3)">npx @enescinar/twitter-mcp</code>. Requires
+                        API Key, API Secret, Access Token, Access Token Secret from X Developer portal.</p>
+                </div>
+                <div class="demo-card">
+                    <div class="dtitle">Weather MCP</div>
+                    <p>GitHub: <code style="font-size:0.78em;color:var(--accent3)">adhikasp/mcp-weather</code>. Uses
+                        <code style="font-size:0.78em;color:var(--accent3)">uvx</code> command + AccuWeather API key.
+                        Provides hourly/daily forecasts.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. Config File Setup -->
+        <div class="card orange">
+            <div class="card-title orange"><span class="icon">📄</span> Config File — <code
+                    style="font-size:0.85em;font-family:'DM Mono'">claude_desktop_config.json</code></div>
+            <p style="color:var(--muted);font-size:0.88rem">Full example combining manim-server, Twitter MCP, and
+                Weather MCP:</p>
+            <pre>
+{
+  <span class="kw">"mcpServers"</span>: {
+    <span class="cm">// Local: manim animation server</span>
+    <span class="kw">"manim-server"</span>: {
+      <span class="kw">"env"</span>: {
+        <span class="kw">"MANIM_EXECUTABLE"</span>: <span class="str">"/Library/Frameworks/Python.../bin/manim"</span>
+      }
+    },
+    <span class="cm">// Remote: Twitter via npx</span>
+    <span class="kw">"twitter-mcp"</span>: {
+      <span class="kw">"command"</span>: <span class="str">"npx"</span>,
+      <span class="kw">"args"</span>: [<span class="str">"-y"</span>, <span class="str">"@enescinar/twitter-mcp"</span>],
+      <span class="kw">"env"</span>: {
+        <span class="kw">"API_KEY"</span>: <span class="str">"&lt;your-api-key&gt;"</span>,
+        <span class="kw">"API_SECRET_KEY"</span>: <span class="str">"&lt;your-secret&gt;"</span>,
+        <span class="kw">"ACCESS_TOKEN"</span>: <span class="str">"&lt;your-token&gt;"</span>,
+        <span class="kw">"ACCESS_TOKEN_SECRET"</span>: <span class="str">"&lt;your-token-secret&gt;"</span>
+      }
+    },
+    <span class="cm">// Remote: Weather via uvx</span>
+    <span class="kw">"weather"</span>: {
+      <span class="kw">"command"</span>: <span class="str">"uvx"</span>,
+      <span class="kw">"args"</span>: [<span class="str">"--from"</span>, <span class="str">"git+https://github.com/adhikasp/mcp-weather.git"</span>, <span class="str">"mcp-weather"</span>],
+      <span class="kw">"env"</span>: {
+        <span class="kw">"ACCUWEATHER_API_KEY"</span>: <span class="str">"&lt;your-accuweather-key&gt;"</span>
+      }
+    }
+  }
+}
+</pre>
+        </div>
+
+        <!-- 9. Awesome MCP Servers -->
+        <div class="card teal">
+            <div class="card-title teal"><span class="icon">🌟</span> Awesome MCP Servers — Where to Find More</div>
+            <div class="two-col" style="margin-bottom:1rem">
+                <div class="list-item">
+                    <div class="dot"></div><strong>punkpeye/awesome-mcp-servers</strong> — 70.7k ⭐ on GitHub
+                </div>
+                <div class="list-item">
+                    <div class="dot"></div><strong>mcpservers.org</strong> — Curated discovery site
+                </div>
+                <div class="list-item">
+                    <div class="dot"></div><strong>glama.ai/mcp/servers</strong> — Search & browse
+                </div>
+                <div class="list-item">
+                    <div class="dot"></div><strong>modelcontextprotocol.io</strong> — Official examples
+                </div>
+            </div>
+            <div class="section-divider">Aggregator Servers (meta-MCP)</div>
+            <div class="agg-list">
+                <div class="agg-item"><span class="agg-name">1mcp/agent</span><span class="agg-desc">Unifies multiple
+                        MCP servers into one implementation</span></div>
+                <div class="agg-item"><span class="agg-name">duaraghav8/MCPJungle</span><span
+                        class="agg-desc">Self-hosted MCP Server registry for enterprise AI Agents</span></div>
+                <div class="agg-item"><span class="agg-name">glenngillen/mcpmcp-server</span><span class="agg-desc">Ask
+                        your client which servers improve your workflow</span></div>
+                <div class="agg-item"><span class="agg-name">hamfix/imagen3-mcp</span><span class="agg-desc">Google
+                        Imagen 3.0 image generation via MCP</span></div>
+                <div class="agg-item"><span class="agg-name">julien040/anyquery</span><span class="agg-desc">Query 40+
+                        apps with SQL — PostgreSQL / MySQL / SQLite compatible</span></div>
+                <div class="agg-item"><span class="agg-name">metatool-ai/metatool-app</span><span
+                        class="agg-desc">MetaMCP — unified middleware server with GUI for MCP connections</span></div>
+                <div class="agg-item"><span class="agg-name">mindsdb/mindsdb</span><span class="agg-desc">Connect and
+                        unify data across various platforms and databases</span></div>
+                <div class="agg-item"><span class="agg-name">particlefuture/MCPDiscovery</span><span
+                        class="agg-desc">MCP of MCPs — central hub to discover, install & learn servers</span></div>
+                <div class="agg-item"><span class="agg-name">PipedreamHQ/pipedream</span><span class="agg-desc">Connect
+                        2,500 APIs with 8,000+ prebuilt tools</span></div>
+                <div class="agg-item"><span class="agg-name">sitbon/magg</span><span class="agg-desc">Meta-MCP:
+                        autonomously discovers, installs & orchestrates servers</span></div>
+                <div class="agg-item"><span class="agg-name">sxhxliang/mcp-access-point</span><span
+                        class="agg-desc">Turn any web service into an MCP server — no code changes</span></div>
+            </div>
+        </div>
+
+        <!-- 10. Quick Reference -->
+        <div class="card mixed">
+            <div class="card-title" style="color:var(--text)"><span class="icon">⚡</span> Quick Reference</div>
+            <div class="two-col">
+                <div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--accent)"></div><strong>Config location (Mac):</strong>
+                        <code
+                            style="font-family:'DM Mono';font-size:0.8em;color:var(--accent3)">~/Library/Application Support/Claude/</code>
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--accent)"></div><strong>Restart Claude</strong> after
+                        editing config
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--accent)"></div><strong>npx</strong> = run Node.js MCP
+                        servers
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--accent)"></div><strong>uvx</strong> = run Python MCP
+                        servers
+                    </div>
+                </div>
+                <div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--accent2)"></div><strong>Web connectors</strong> need
+                        OAuth (Google, GitHub…)
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--accent2)"></div><strong>Desktop extensions</strong> run
+                        locally, toggled per chat
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--accent2)"></div><strong>Pro plan</strong> required for
+                        Connectors feature
+                    </div>
+                    <div class="list-item">
+                        <div class="dot" style="background:var(--accent2)"></div>Toggle tools via the <strong>⊕
+                            menu</strong> in chat input
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>Notes extracted from: Model Context Protocol | The How | How to connect MCP Servers to Claude Desktop</p>
+        <p style="margin-top:0.3rem">46:16 min video — Claude Sonnet 4.6</p>
+    </footer>
+
+</body>
+
+</html>
