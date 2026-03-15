@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Architecture Notes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d0f14;
+            --surface: #13161e;
+            --surface2: #1a1e2a;
+            --border: #252a38;
+            --accent: #5b8fff;
+            --accent2: #3dffc0;
+            --accent3: #ff6b6b;
+            --accent4: #ffd166;
+            --text: #e8eaf0;
+            --muted: #6b7280;
+            --code-bg: #0a0c12;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        /* Subtle grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 56px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header .tag {
+            display: inline-block;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--accent2);
+            background: rgba(61, 255, 192, 0.07);
+            border: 1px solid rgba(61, 255, 192, 0.2);
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(32px, 5vw, 52px);
+            font-weight: 800;
+            line-height: 1.1;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+
+        .header h1 span {
+            color: var(--accent);
+        }
+
+        .header p {
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 48px;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .section:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .section:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .section:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        .section:nth-child(5) {
+            animation-delay: 0.25s;
+        }
+
+        .section:nth-child(6) {
+            animation-delay: 0.3s;
+        }
+
+        .section:nth-child(7) {
+            animation-delay: 0.35s;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .section-num {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            background: rgba(91, 143, 255, 0.1);
+            border: 1px solid rgba(91, 143, 255, 0.25);
+            padding: 3px 9px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .section h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* Card */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: rgba(91, 143, 255, 0.3);
+        }
+
+        .card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--accent4);
+        }
+
+        .card p,
+        .card li {
+            font-size: 14px;
+            color: #b0b8c8;
+            line-height: 1.7;
+        }
+
+        .card ul {
+            padding-left: 18px;
+        }
+
+        .card li {
+            margin-bottom: 4px;
+        }
+
+        /* Grid layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+        }
+
+        @media (max-width: 640px) {
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Primitive pill cards */
+        .primitive {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .primitive::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+        }
+
+        .primitive.tools::before {
+            background: var(--accent);
+        }
+
+        .primitive.resources::before {
+            background: var(--accent2);
+        }
+
+        .primitive.prompts::before {
+            background: var(--accent4);
+        }
+
+        .primitive .label {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .primitive.tools .label {
+            color: var(--accent);
+        }
+
+        .primitive.resources .label {
+            color: var(--accent2);
+        }
+
+        .primitive.prompts .label {
+            color: var(--accent4);
+        }
+
+        .primitive p {
+            font-size: 13px;
+            color: #8899aa;
+            line-height: 1.6;
+        }
+
+        /* Code block */
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px 20px;
+            font-family: 'DM Mono', monospace;
+            font-size: 12.5px;
+            line-height: 1.8;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+
+        .code-block .key {
+            color: #7da3ff;
+        }
+
+        .code-block .val {
+            color: var(--accent2);
+        }
+
+        .code-block .comment {
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        .code-block .method {
+            color: var(--accent4);
+        }
+
+        .code-block .err {
+            color: var(--accent3);
+        }
+
+        /* Operations table */
+        .ops-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+
+        .ops-table th {
+            text-align: left;
+            padding: 10px 14px;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ops-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(37, 42, 56, 0.5);
+            color: #b0b8c8;
+            vertical-align: top;
+        }
+
+        .ops-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ops-table code {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            background: rgba(91, 143, 255, 0.1);
+            color: var(--accent);
+            padding: 2px 7px;
+            border-radius: 4px;
+        }
+
+        /* Transport badge */
+        .badge {
+            display: inline-block;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .badge.stdio {
+            background: rgba(91, 143, 255, 0.12);
+            color: var(--accent);
+            border: 1px solid rgba(91, 143, 255, 0.25);
+        }
+
+        .badge.http {
+            background: rgba(61, 255, 192, 0.1);
+            color: var(--accent2);
+            border: 1px solid rgba(61, 255, 192, 0.2);
+        }
+
+        /* Info row */
+        .info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(37, 42, 56, 0.5);
+            font-size: 13.5px;
+            color: #b0b8c8;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-row .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+
+        .info-row .dot.green {
+            background: var(--accent2);
+        }
+
+        .info-row .dot.yellow {
+            background: var(--accent4);
+        }
+
+        .info-row .dot.red {
+            background: var(--accent3);
+        }
+
+        strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* Architecture diagram (CSS art) */
+        .arch-diagram {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        .arch-box {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 18px;
+            text-align: center;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .arch-box.host {
+            border-color: rgba(255, 209, 102, 0.4);
+            color: var(--accent4);
+        }
+
+        .arch-box.server {
+            border-color: rgba(61, 255, 192, 0.35);
+            color: var(--accent2);
+        }
+
+        .arch-box.llm {
+            border-color: rgba(91, 143, 255, 0.35);
+            color: var(--accent);
+        }
+
+        .arch-arrow {
+            color: var(--muted);
+            font-size: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .arch-arrow span {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            color: var(--muted);
+            letter-spacing: 0.5px;
+        }
+
+        /* Divider */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 40px 0;
+        }
+
+        /* TOC */
+        .toc {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 48px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .toc a {
+            font-family: 'DM Mono', monospace;
+            font-size: 11.5px;
+            color: var(--muted);
+            text-decoration: none;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            padding: 4px 12px;
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+
+        .toc a:hover {
+            color: var(--accent);
+            border-color: rgba(91, 143, 255, 0.3);
+        }
+
+        /* Section anchor */
+        .section {
+            scroll-margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+
+        <!-- Header -->
+        <div class="header">
+            <div class="tag">CampusX · Study Notes</div>
+            <h1>Model Context<br><span>Protocol</span> Architecture</h1>
+            <p>MCP Architecture — complete notes from lecture screenshots</p>
+        </div>
+
+        <!-- TOC -->
+        <div class="toc">
+            <a href="#s1">Overview</a>
+            <a href="#s2">Architecture</a>
+            <a href="#s3">Benefits</a>
+            <a href="#s4">Primitives</a>
+            <a href="#s5">Data Layer</a>
+            <a href="#s6">JSON RPC 2.0</a>
+            <a href="#s7">RPC Examples</a>
+            <a href="#s8">Transport Layer</a>
+            <a href="#s9">STDIO</a>
+            <a href="#s10">HTTP + SSE</a>
+        </div>
+
+        <!-- 1. Overview -->
+        <div class="section" id="s1">
+            <div class="section-header">
+                <span class="section-num">01</span>
+                <h2>What is MCP?</h2>
+            </div>
+            <div class="card">
+                <p>MCP (Model Context Protocol) is a standardized protocol that allows AI models (LLMs) to connect to
+                    external tools and data sources through a common interface. It decouples the AI host from the
+                    services it uses.</p>
+            </div>
+            <div class="arch-diagram">
+                <div class="arch-box llm">LLM<br><small style="font-size:10px;font-weight:400;color:var(--muted)">GPT /
+                        Claude / Gemini</small></div>
+                <div class="arch-arrow">↕<span>API</span></div>
+                <div class="arch-box host">Host<br><small style="font-size:10px;font-weight:400;color:var(--muted)">+
+                        Clients</small></div>
+                <div class="arch-arrow">→<span>JSON-RPC</span></div>
+                <div>
+                    <div class="arch-box server" style="margin-bottom:8px">Local Server<br><small
+                            style="font-size:10px;font-weight:400;color:var(--muted)">STDIO</small></div>
+                    <div class="arch-box server">Remote Server<br><small
+                            style="font-size:10px;font-weight:400;color:var(--muted)">HTTP + SSE</small></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Architecture -->
+        <div class="section" id="s2">
+            <div class="section-header">
+                <span class="section-num">02</span>
+                <h2>Architecture Components</h2>
+            </div>
+            <div class="grid-3">
+                <div class="card">
+                    <h3>🖥️ Host</h3>
+                    <p>The AI application (e.g., Claude Desktop, ChatGPT). Contains one or more Clients. Talks to the
+                        LLM and manages user interactions.</p>
+                </div>
+                <div class="card">
+                    <h3>🔌 Client</h3>
+                    <p>Lives inside the Host. Each Client maintains a 1-to-1 connection with exactly one Server. Sends
+                        requests and receives responses.</p>
+                </div>
+                <div class="card">
+                    <h3>⚙️ Server</h3>
+                    <p>An external program (GitHub, Slack, Filesystem, etc.) that exposes tools, resources, and prompts
+                        to the Host via JSON-RPC.</p>
+                </div>
+            </div>
+            <div class="card" style="margin-top:0">
+                <h3>Key Rule</h3>
+                <p>One Host → many Clients → many Servers. Each Client connects to exactly one Server. The Host manages
+                    all Clients internally.</p>
+            </div>
+        </div>
+
+        <!-- 3. Benefits -->
+        <div class="section" id="s3">
+            <div class="section-header">
+                <span class="section-num">03</span>
+                <h2>Benefits of MCP</h2>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Decoupling</h3>
+                    <div class="info-row">
+                        <div class="dot green"></div>
+                        <div><strong>Safety</strong> — Servers are isolated; a faulty server can't crash the host.</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot green"></div>
+                        <div><strong>Parallelism</strong> — Multiple clients can call multiple servers simultaneously.
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Scalability</h3>
+                    <div class="info-row">
+                        <div class="dot yellow"></div>
+                        <div>Add new servers without changing the Host.</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="dot yellow"></div>
+                        <div>Any LLM can connect to any MCP server using the same protocol.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Primitives -->
+        <div class="section" id="s4">
+            <div class="section-header">
+                <span class="section-num">04</span>
+                <h2>MCP Primitives</h2>
+            </div>
+            <div class="card" style="margin-bottom:16px">
+                <p>Primitives are the <strong>things a Server can offer to the Host</strong>. Every MCP server exposes
+                    some combination of these three building blocks.</p>
+            </div>
+            <div class="grid-3">
+                <div class="primitive tools">
+                    <div class="label">Tools</div>
+                    <p>Actions the AI asks the server to perform. e.g. create issue, list PRs, send message.</p>
+                </div>
+                <div class="primitive resources">
+                    <div class="label">Resources</div>
+                    <p>Structured data sources the AI can read. e.g. file contents, repo data, open issues list.</p>
+                </div>
+                <div class="primitive prompts">
+                    <div class="label">Prompts</div>
+                    <p>Predefined prompt templates the server offers to shape AI behavior. Ensures consistent,
+                        structured output.</p>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:16px">
+                <h3>Standard Operations per Primitive</h3>
+                <table class="ops-table" style="margin-top:8px">
+                    <tr>
+                        <th>Primitive</th>
+                        <th>Operations</th>
+                        <th>Meaning</th>
+                    </tr>
+                    <tr>
+                        <td>Tools</td>
+                        <td><code>tools/list</code><br><code>tools/call</code></td>
+                        <td>"What tools do you have?" / "Run this tool with these args."</td>
+                    </tr>
+                    <tr>
+                        <td>Resources</td>
+                        <td><code>resources/list</code><br><code>resources/read</code><br><code>resources/subscribe</code>
+                        </td>
+                        <td>"What's available?" / "Give me this content." / Subscribe to updates.</td>
+                    </tr>
+                    <tr>
+                        <td>Prompts</td>
+                        <td><code>prompts/list</code><br><code>prompts/get</code></td>
+                        <td>"What templates do you have?" / "Fetch this template."</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="card" style="margin-top:14px">
+                <h3>Prompts Primitive — Why It Matters</h3>
+                <p style="margin-bottom:10px">Without a prompt template, the AI writes vague issues:</p>
+                <div class="code-block" style="margin-bottom:8px">
+                    <span class="comment">// ❌ Too vague</span><br>
+                    Title: Login bug<br>
+                    Body: The login button doesn't work.
+                </div>
+                <p style="margin-bottom:10px">With an <code
+                        style="font-family:'DM Mono',monospace;font-size:12px;background:rgba(91,143,255,0.1);color:var(--accent);padding:1px 6px;border-radius:3px">issue_report_prompt</code>
+                    template from the server:</p>
+                <div class="code-block">
+                    <span class="comment">// ✅ Structured & useful</span><br>
+                    Title: Bug — Login Button Not Working<br><br>
+                    **Steps to Reproduce:**<br>
+                    1. Open the login page<br>
+                    2. Enter valid credentials<br>
+                    3. Click the Login button<br><br>
+                    **Expected:** User logged in &amp; redirected to dashboard<br>
+                    **Actual:** Nothing happens<br>
+                    **Environment:** Chrome 121, macOS 14.2
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Data Layer -->
+        <div class="section" id="s5">
+            <div class="section-header">
+                <span class="section-num">05</span>
+                <h2>MCP Data Layer</h2>
+            </div>
+            <div class="card">
+                <h3>What is the Data Layer?</h3>
+                <p>The shared language and grammar that all MCP components agree to use when communicating. In MCP,
+                    <strong>JSON-RPC 2.0</strong> is the foundation of the data layer.
+                </p>
+            </div>
+        </div>
+
+        <!-- 6. JSON RPC 2.0 -->
+        <div class="section" id="s6">
+            <div class="section-header">
+                <span class="section-num">06</span>
+                <h2>JSON RPC 2.0</h2>
+            </div>
+            <div class="card" style="margin-bottom:14px">
+                <p><strong>JSON-RPC</strong> combines <strong>Remote Procedure Calls (RPC)</strong> with the simplicity
+                    of <strong>JSON</strong>, allowing structured requests and responses in a standardized format.</p>
+            </div>
+            <div class="grid-2">
+                <div>
+                    <div class="card">
+                        <h3>Request Structure</h3>
+                        <div class="code-block">
+                            {<br>
+                            &nbsp;&nbsp;<span class="key">"jsonrpc"</span>: <span class="val">"2.0"</span>,<br>
+                            &nbsp;&nbsp;<span class="key">"method"</span>: <span class="method">"tools/call"</span>,<br>
+                            &nbsp;&nbsp;<span class="key">"params"</span>: { ... },<br>
+                            &nbsp;&nbsp;<span class="key">"id"</span>: <span class="val">1</span><br>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="card">
+                        <h3>Success Response</h3>
+                        <div class="code-block">
+                            {<br>
+                            &nbsp;&nbsp;<span class="key">"jsonrpc"</span>: <span class="val">"2.0"</span>,<br>
+                            &nbsp;&nbsp;<span class="key">"result"</span>: { ... },<br>
+                            &nbsp;&nbsp;<span class="key">"id"</span>: <span class="val">1</span><br>
+                            }
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top:14px">
+                        <h3>Error Response</h3>
+                        <div class="code-block">
+                            {<br>
+                            &nbsp;&nbsp;<span class="key">"jsonrpc"</span>: <span class="val">"2.0"</span>,<br>
+                            &nbsp;&nbsp;<span class="key">"error"</span>: {<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"code"</span>: <span
+                                class="err">-32601</span>,<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"message"</span>: <span class="val">"Method not
+                                found"</span><br>
+                            &nbsp;&nbsp;},<br>
+                            &nbsp;&nbsp;<span class="key">"id"</span>: <span class="val">1</span><br>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:14px">
+                <h3>Why JSON-RPC for MCP?</h3>
+                <div class="info-row">
+                    <div class="dot"></div>
+                    <div><strong>Lightweight</strong> — minimal overhead, pure JSON</div>
+                </div>
+                <div class="info-row">
+                    <div class="dot green"></div>
+                    <div><strong>Bi-directional</strong> — client→server and server→client</div>
+                </div>
+                <div class="info-row">
+                    <div class="dot yellow"></div>
+                    <div><strong>Transport-agnostic</strong> — works over STDIO or HTTP/SSE</div>
+                </div>
+                <div class="info-row">
+                    <div class="dot"></div>
+                    <div><strong>Supports Batching</strong> — send multiple requests in one call</div>
+                </div>
+                <div class="info-row">
+                    <div class="dot green"></div>
+                    <div><strong>Supports Notifications</strong> — fire-and-forget server→client messages (no id field)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. JSON RPC Examples -->
+        <div class="section" id="s7">
+            <div class="section-header">
+                <span class="section-num">07</span>
+                <h2>JSON-RPC in Action — Examples</h2>
+            </div>
+
+            <div class="card" style="margin-bottom:14px">
+                <h3>1. Discover Tools — <code
+                        style="font-family:'DM Mono',monospace;font-size:12px;background:rgba(91,143,255,0.1);color:var(--accent);padding:1px 6px;border-radius:3px">tools/list</code>
+                </h3>
+                <div class="grid-2">
+                    <div>
+                        <p style="font-size:12px;color:var(--muted);margin-bottom:6px">Request</p>
+                        <div class="code-block">{ <span class="key">"jsonrpc"</span>: <span
+                                class="val">"2.0"</span>,<br>&nbsp;&nbsp;<span class="key">"id"</span>: <span
+                                class="val">1</span>, <span class="method">"method"</span>: <span
+                                class="val">"tools/list"</span>,<br>&nbsp;&nbsp;<span class="key">"params"</span>: {} }
+                        </div>
+                    </div>
+                    <div>
+                        <p style="font-size:12px;color:var(--muted);margin-bottom:6px">Response</p>
+                        <div class="code-block">{ <span class="key">"result"</span>: { <span class="key">"tools"</span>:
+                            [<br>&nbsp;&nbsp;{ <span class="key">"name"</span>: <span
+                                class="val">"github.listIssues"</span> },<br>&nbsp;&nbsp;{ <span
+                                class="key">"name"</span>: <span class="val">"github.listPulls"</span> }<br>] } }</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:14px">
+                <h3>2. Call a Tool — <code
+                        style="font-family:'DM Mono',monospace;font-size:12px;background:rgba(91,143,255,0.1);color:var(--accent);padding:1px 6px;border-radius:3px">tools/call</code>
+                </h3>
+                <div class="grid-2">
+                    <div>
+                        <p style="font-size:12px;color:var(--muted);margin-bottom:6px">Request</p>
+                        <div class="code-block">{ <span class="method">"method"</span>: <span
+                                class="val">"tools/call"</span>,<br>&nbsp;&nbsp;<span class="key">"params"</span>:
+                            {<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"name"</span>: <span
+                                class="val">"github.listIssues"</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;<span
+                                class="key">"arguments"</span>: {<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                                class="key">"owner"</span>: <span
+                                class="val">"ownerName"</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                                class="key">"repo"</span>: <span
+                                class="val">"repoName"</span><br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>&nbsp;&nbsp;} }</div>
+                    </div>
+                    <div>
+                        <p style="font-size:12px;color:var(--muted);margin-bottom:6px">Response</p>
+                        <div class="code-block">{ <span class="key">"result"</span>: {<br>&nbsp;&nbsp;<span
+                                class="key">"content"</span>: [<br>&nbsp;&nbsp;&nbsp;&nbsp;{ <span
+                                class="key">"id"</span>: <span
+                                class="val">271</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                                class="key">"title"</span>: <span class="val">"Crash on
+                                startup"</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                                class="key">"state"</span>: <span class="val">"open"</span>
+                            },<br>&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"id"</span>: <span
+                                class="val">272</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                                class="key">"title"</span>: <span class="val">"Null pointer bug"</span>
+                            }<br>&nbsp;&nbsp;] } }</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:14px">
+                <h3>3. List & Read Resources — <code
+                        style="font-family:'DM Mono',monospace;font-size:12px;background:rgba(91,143,255,0.1);color:var(--accent);padding:1px 6px;border-radius:3px">resources/list</code>
+                    &amp; <code
+                        style="font-family:'DM Mono',monospace;font-size:12px;background:rgba(91,143,255,0.1);color:var(--accent);padding:1px 6px;border-radius:3px">resources/read</code>
+                </h3>
+                <div class="grid-2">
+                    <div>
+                        <p style="font-size:12px;color:var(--muted);margin-bottom:6px">List → returns URIs</p>
+                        <div class="code-block">{ <span class="key">"resources"</span>: [<br>&nbsp;&nbsp;{ <span
+                                class="key">"uri"</span>: <span
+                                class="val">"github://repo/owner/repo"</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;<span
+                                class="key">"name"</span>: <span class="val">"Main repo"</span> },<br>&nbsp;&nbsp;{
+                            <span class="key">"uri"</span>: <span
+                                class="val">"github://repo/.../issues"</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;<span
+                                class="key">"name"</span>: <span class="val">"Open issues"</span> }<br>] }
+                        </div>
+                    </div>
+                    <div>
+                        <p style="font-size:12px;color:var(--muted);margin-bottom:6px">Read → fetches content by URI</p>
+                        <div class="code-block"><span class="comment">// Request passes URI</span><br>{ <span
+                                class="key">"method"</span>: <span
+                                class="val">"resources/read"</span>,<br>&nbsp;&nbsp;<span class="key">"params"</span>: {
+                            <span class="key">"uri"</span>: <span class="val">"github://.../issues"</span> }
+                            }<br><br><span class="comment">// Response returns content</span><br>{ <span
+                                class="key">"contents"</span>: [<br>&nbsp;&nbsp;{ <span class="key">"uri"</span>: <span
+                                class="val">"..."</span>, <span class="key">"text"</span>: <span
+                                class="val">"[{...issues...}]"</span> }<br>] }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3>4. Batching — many in one request</h3>
+                    <p style="margin-bottom:10px;font-size:13px">Send an <strong>array</strong> of requests; get an
+                        array of responses back.</p>
+                    <div class="code-block">
+                        <span class="comment">// Request (array)</span><br>
+                        [ { <span class="key">"id"</span>: <span class="val">5</span>, <span
+                            class="method">"method"</span>: <span class="val">"tools/call"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"params"</span>: { <span class="key">"name"</span>:
+                        <span class="val">"github.listIssues"</span> } },<br>
+                        &nbsp;&nbsp;{ <span class="key">"id"</span>: <span class="val">6</span>, <span
+                            class="method">"method"</span>: <span class="val">"tools/call"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"params"</span>: { <span class="key">"name"</span>:
+                        <span class="val">"github.listPulls"</span> } } ]<br><br>
+                        <span class="comment">// Response (array)</span><br>
+                        [ { <span class="key">"id"</span>: <span class="val">5</span>, <span
+                            class="key">"result"</span>: { ... } },<br>
+                        &nbsp;&nbsp;{ <span class="key">"id"</span>: <span class="val">6</span>, <span
+                            class="key">"result"</span>: { ... } } ]
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>5. Notification (fire-and-forget)</h3>
+                    <p style="margin-bottom:10px;font-size:13px">Server → Client push. <strong>No id field</strong> = no
+                        response expected.</p>
+                    <div class="code-block">
+                        <span class="comment">// Server sends this; client just listens</span><br>
+                        {<br>
+                        &nbsp;&nbsp;<span class="key">"jsonrpc"</span>: <span class="val">"2.0"</span>,<br>
+                        &nbsp;&nbsp;<span class="method">"method"</span>: <span class="val">"files/updated"</span>,<br>
+                        &nbsp;&nbsp;<span class="key">"params"</span>: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"fileId"</span>: <span
+                            class="val">"abc123"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"name"</span>: <span
+                            class="val">"ProjectPlan.docx"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"updatedBy"</span>: <span
+                            class="val">"alice@example.com"</span><br>
+                        &nbsp;&nbsp;}<br>
+                        }
+                    </div>
+                    <div class="card"
+                        style="margin-top:12px;background:rgba(255,107,107,0.05);border-color:rgba(255,107,107,0.2)">
+                        <h3 style="color:var(--accent3)">6. Error Example</h3>
+                        <p style="font-size:12px;margin-bottom:6px">Missing required field 'repo':</p>
+                        <div class="code-block">{ <span class="key">"error"</span>: { <span class="key">"code"</span>:
+                            <span class="err">-32602</span>,<br>&nbsp;&nbsp;<span class="key">"message"</span>: <span
+                                class="err">"Missing required field 'repo'"</span> } }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. Transport Layer -->
+        <div class="section" id="s8">
+            <div class="section-header">
+                <span class="section-num">08</span>
+                <h2>MCP Transport Layer</h2>
+            </div>
+            <div class="card">
+                <p>The <strong>Transport Layer</strong> is the mechanism that physically moves JSON-RPC messages between
+                    Client and Server. The choice of transport depends on the type of server (local or remote).</p>
+            </div>
+            <div class="grid-2" style="margin-top:14px">
+                <div class="card" style="border-color:rgba(91,143,255,0.25)">
+                    <h3 style="display:flex;align-items:center;gap:8px">Local Server <span
+                            class="badge stdio">STDIO</span></h3>
+                    <p>Program running on your own machine. Uses Standard I/O streams to communicate.</p>
+                </div>
+                <div class="card" style="border-color:rgba(61,255,192,0.2)">
+                    <h3 style="display:flex;align-items:center;gap:8px">Remote Server <span class="badge http">HTTP +
+                            SSE</span></h3>
+                    <p>Program running on another computer over the network or internet.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. STDIO -->
+        <div class="section" id="s9">
+            <div class="section-header">
+                <span class="section-num">09</span>
+                <h2>Local Servers — STDIO Transport</h2>
+            </div>
+            <div class="card" style="margin-bottom:14px">
+                <h3>What is STDIO?</h3>
+                <p>STDIO refers to the <strong>built-in streams every program has</strong>:</p>
+                <div class="info-row" style="margin-top:8px">
+                    <div class="dot"></div>
+                    <div><strong>stdin</strong> — the input the program reads from</div>
+                </div>
+                <div class="info-row">
+                    <div class="dot green"></div>
+                    <div><strong>stdout</strong> — the output the program writes to</div>
+                </div>
+                <div
+                    style="margin-top:12px;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:13.5px;color:#b0b8c8">
+                    In MCP, these streams are used as the transport layer between the Client and Server.</div>
+            </div>
+
+            <div class="card" style="margin-bottom:14px">
+                <h3>How STDIO Works</h3>
+                <div class="info-row">
+                    <div class="dot"></div>
+                    <div>Host launches the server as a <strong>subprocess</strong> on the same machine.</div>
+                </div>
+                <div class="info-row">
+                    <div class="dot green"></div>
+                    <div>Host (client) writes JSON-RPC messages into the server's <strong>STDIN</strong>.</div>
+                </div>
+                <div class="info-row">
+                    <div class="dot yellow"></div>
+                    <div>Server reads, processes, and writes responses back to its <strong>STDOUT</strong>.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Benefits of STDIO</h3>
+                <div class="info-row">
+                    <div class="dot"></div>
+                    <div><strong>Fast</strong> — data passed directly between processes, no network hop.</div>
+                </div>
+                <div class="info-row">
+                    <div class="dot green"></div>
+                    <div><strong>Secure</strong> — no open network port; communication is fully local.</div>
+                </div>
+                <div class="info-row">
+                    <div class="dot yellow"></div>
+                    <div><strong>Simple</strong> — every language/runtime supports stdin/stdout. No extra libraries
+                        needed.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. HTTP + SSE -->
+        <div class="section" id="s10">
+            <div class="section-header">
+                <span class="section-num">10</span>
+                <h2>Remote Servers — HTTP + SSE Transport</h2>
+            </div>
+            <div class="card" style="margin-bottom:14px">
+                <h3>HTTP</h3>
+                <div class="info-row">
+                    <div class="dot green"></div>
+                    <div>Allows the Host to reach servers running <strong>anywhere</strong> on the internet.</div>
+                </div>
+                <div class="info-row">
+                    <div class="dot"></div>
+                    <div>Host sends JSON-RPC requests using <strong>HTTP POST</strong> with a JSON payload.</div>
+                </div>
+                <div class="info-row">
+                    <div class="dot yellow"></div>
+                    <div>Supports standard <strong>HTTP auth methods</strong> like API keys.</div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>SSE — Server Sent Events</h3>
+                <p style="margin-bottom:10px;font-size:13px">SSE is an <strong>extension of HTTP</strong> that enables
+                    server-to-client streaming.</p>
+                <div class="info-row">
+                    <div class="dot"></div>
+                    <div>Server sends <strong>multiple messages</strong> to the client over a single open connection.
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="dot green"></div>
+                    <div>Instead of one large JSON blob, the server <strong>streams chunks</strong> as they become
+                        ready.</div>
+                </div>
+                <div class="info-row">
+                    <div class="dot yellow"></div>
+                    <div>Ideal for <strong>long-running tasks</strong> or incremental updates (e.g., AI generation in
+                        progress).</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Final summary diagram -->
+        <hr class="divider">
+        <div class="section">
+            <div class="section-header">
+                <span class="section-num">∑</span>
+                <h2>Full Picture</h2>
+            </div>
+            <div class="card">
+                <div class="arch-diagram"
+                    style="background:transparent;border:none;padding:0;flex-direction:column;gap:14px">
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center">
+                        <div class="arch-box llm">LLM (ChatGPT / Claude / Gemini)</div>
+                        <div style="color:var(--muted)">↕</div>
+                        <div class="arch-box host">Host + Clients</div>
+                    </div>
+                    <div style="display:flex;align-items:flex-start;gap:40px;flex-wrap:wrap;justify-content:center">
+                        <div style="text-align:center">
+                            <div
+                                style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:6px">
+                                JSON-RPC via STDIO</div>
+                            <div class="arch-box server">Local Server<br><small
+                                    style="font-weight:400;font-size:11px;color:#8899aa">tools · resources ·
+                                    prompts</small></div>
+                            <div style="font-size:11px;color:var(--muted);margin-top:6px">Filesystem, local scripts
+                            </div>
+                        </div>
+                        <div style="text-align:center">
+                            <div
+                                style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:6px">
+                                JSON-RPC via HTTP + SSE</div>
+                            <div class="arch-box server">Remote Server<br><small
+                                    style="font-weight:400;font-size:11px;color:#8899aa">tools · resources ·
+                                    prompts</small></div>
+                            <div style="font-size:11px;color:var(--muted);margin-top:6px">GitHub, Slack, Google Drive
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="text-align:center;margin-top:40px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">
+            MCP Architecture Notes · CampusX · 2025
+        </div>
+
+    </div>
+</body>
+
+</html>
